@@ -1,0 +1,255 @@
+Name
+
+    KHR_iterative_average_blur
+
+Name Strings
+
+    VG_KHR_iterative_average_blur
+
+Contributors
+
+    Ray Taylor
+    James Walker
+
+Contacts
+
+    James Walker, NDS   (jwalker 'at' ndsuk.com)
+
+Version
+
+    Revision 3 (January 30, 2008)
+
+Number
+
+    OpenVG Extension #2
+
+Status
+
+    Published
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+
+    This extension is written against the wording of the OpenVG 1.0
+    Specification.
+
+IP Status
+
+    No known IP issues
+
+Overview
+
+    This extension is designed to support a lower complexity blur operation
+    than the vgGaussianBlur function defined in OpenVG 1.0, and one which
+    offers the application developer a more flexible choice between performance
+    and quality.
+
+    Although a box blur can be implemented using a separable convolution kernel
+    (and therefore using the vgConvolve or vgSeperableConvolve functions
+    defined in OpenVG 1.0), it is potentially more efficient to implement
+    it as a rolling average. In this mode the sum (prior to division)
+    is kept, and adjusted by subtracting the pixel leaving the blur window
+    and adding the pixel entering it. This reduces the number of operations
+    needed in a software implementation, and the number of multipliers
+    needed in a hardware implementation to achieve the same blur.
+
+    Multiple passes give a 'higher’ quality result (tending to Gaussian),
+    but still at lower computational cost compared to convolution kernel
+    based filters, particularly for larger kernel sizes.
+
+    The iterative average filter is separable in the X and Y axis, and all
+    iterations can be performed in one axis prior to applying the average
+    filter iterations in the other axis, allowing an  cache-efficient
+    implementation.
+
+New Procedures and Functions
+
+    VG_API_CALL void vgIterativeAverageBlurKHR(VGImage dst,
+                                               VGImage src,
+                                               VGfloat dimX,
+                                               VGfloat dimY,
+                                               VGuint iterative,
+                                               VGTilingMode tilingMode) ;
+
+New Tokens
+
+    VG_MAX_AVERAGE_BLUR_DIMENSION_KHR           0x116B
+    VG_AVERAGE_BLUR_DIMENSION_RESOLUTION_KHR    0x116C
+    VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR          0x116D
+
+New Datatypes
+
+New Values for Existing Enumerated Datatypes
+
+Additions to Chapter 11 of the OpenVG 1.0 Specification (Image Filters)
+
+    Within Section 11.4 Convolution, and the following below the vgGaussianBlur
+    entry:
+
+    vgIterativeAverageBlurKHR
+
+    The vgIterativeAverageBlurKHR function computes the iterative average
+    blur of a normalized source image src with blur dimensions dimX and
+    dimY, iterative times.
+
+    The vgIterativeAverageBlurKHR function supports box blurs which are
+    a subset of separable convolution filters.
+
+    The average blur dimensions dimX, dimY and iterative are restricted by
+    VG_MAX_AVERAGE_BLUR_DIMENSION_KHR, VG_AVERAGE_BLUR_DIMENSION_RESOLUTION_KHR
+    and VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR
+    as follows:
+
+        M = VG_MAX_AVERAGE_BLUR_DIMENSION_KHR
+        R = VG_AVERAGE_BLUR_DIMENSION_RESOLUTION_KHR
+        I = VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR
+        iterative' = min(iterative, I)
+        if(R == -1)
+            dimX' = min(dimX, M)
+            dimY' = min(dimY, M)
+        else
+            dimX' = min((round(dimX*pow(1.0,R))/pow(1.0,R)), M)
+            dimY' = min((round(dimY*pow(1.0,R))/pow(1.0,R)), M)
+
+
+    The z-transform IA (dim', iterative') of the separable iterative
+                      z
+
+    averaging filter, where dim is the filter dimension and iterative
+    is the number of iterations to perform, is defined as:
+
+                              --                        i  iterative'
+    IA (dim', iterative') = ( >                 tap(i).z  )
+      z                       -- -nrad<=i<=nrad
+
+    where:
+
+        rad  = (dim' - 1) / 2
+        nrad = trunc(1 + rad)
+
+        if ((i < -nrad) || (i > nrad))
+            tap(i) = 0
+        if ((i == -nrad) || (i == nrad))
+            tap(i) = frac(rad)
+        if ((i > -nrad) && (i < nrad))
+            tap(i) = 1
+
+
+    The iterative average blur is functionally equivalent to calling
+    vgSeparableConvolve function with the following parameters:
+
+        kernelWidth = 1 + pow(nradx, iterative')
+        kernelheight = 1 + pow(nrady, iterative')
+        shiftX = nradx
+        shiftY = nrady
+        scale = 1/((iterative' . dimX') . (iterative' . dimY'))
+        bias = 0
+        kernelX[i] = zcoef(IA (dimX', iterative'), i - nradx)
+                             z
+
+        kernelY[i] = zcoef(IA (dimY', iterative'), i - nrady)
+                             z
+
+    where:
+
+                                                   i
+        zcoef(P (), i) returns the coefficient of z  for polynomial P ()
+               z                                                     z
+
+        nradx = trunc(1 + (dimX' - 1) / 2)
+        nrady = trunc(1 + (dimY' - 1) / 2)
+        
+    Source pixels outside the source image bounds are defined by tilingMode, 
+    which takes a value from the VGTilingMode enumeration (see Section 9.4.1)
+
+    Alternatively, a computationally more efficient implementation may
+    be achieved by applying a rolling average implementation of tap(i)
+    iterative times. The resulting intermediate pixel, I(x), of each
+    individual pass in a single axis is given by:
+
+        T(x) = T(x - 1) +
+               (frac(rad) . p(x + nrad)) +
+               ((1 - frac(rad)) . p(x + (nrad - 1))) -
+               ((1 - frac(rad)) . p(x - nrad)) -
+               (frac(rad) . p(x - (nrad + 1)))
+
+        I(x) = T(x) / dim
+
+    where:
+
+        T(x) is the rolling average prior to division by the blurs dimension.
+        p(x) is the value of the xth pixel in the row or column of the
+        tiled src image for the first iteration, or the output of the previous
+        iteration for subsequent iterations.
+    
+    Using this approach tiling is applied prior to filtering. Logically this 
+    is achieved by expanding the src image by (iterative . nradx) pixels on the
+    left and right, and (iterative . nrady) pixels on the top and bottom. These
+    additional pixels are filled according to tilingMode (see Section 9.4.1).
+
+    Errors:
+
+    VG_BAD_HANDLE_ERROR
+        If either dst or src is not a valid image handle, or is not
+        shared with the current context.
+    
+    VG_IMAGE_IN_USE_ERROR
+        If either dst or src is currently a rendering target.
+    
+    VG_ILLEGAL_ARGUMENT_ERROR
+        If src and dst overlap.
+        If tilingMode is not one of the values from the VGTilingMode enumeration.
+        If dimX < 0 or dimY < 0
+        If dimX > VG_MAX_AVERAGE_BLUR_DIMENSION_KHR or dimY > VG_MAX_AVERAGE_BLUR_DIMENSION_KHR
+        If iterative > VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR
+
+
+New Errors
+
+    None
+
+New State
+
+    VG_MAX_AVERAGE_BLUR_DIMENSION_KHR
+
+    The read-only VG_MAX_AVERAGE_BLUR_DIMENSION_KHR context parameter
+    defines the maximum dimension achievable by the vgIterativeAverageBlurKHR
+    function. Dimensions greater than VG_MAX_AVERAGE_BLUR_DIMENSION_KHR
+    are clamped to VG_MAX_AVERAGE_BLUR_DIMENSION_KHR.
+
+    All implementations must support a dimension of at least 128.
+
+
+    VG_AVERAGE_BLUR_DIMENSION_RESOLUTION_KHR
+
+    The read-only VG_AVERAGE_BLUR_DIMENSION_RESOLUTION_KHR context parameter
+    defines the resolution in bits of the fractional part of dimensions
+    implemented by the vgIterativeAverageBlurKHR function.
+
+    All implementations must support a resolution of at least 1 fractional
+    bit for dimensions. The value -1 indicates the vgIterativeAverageBlurKHR
+    function has been implemented with full floating point dimensions
+    (i.e. as a VGfloat type).
+
+
+    VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR
+
+    The read-only VG_MAX_AVERAGE_BLUR_ITERATIONS_KHR context parameter defines
+    the maximum value for the iterative parameter supported by the
+    vgIterativeAverageBlurKHR function.
+    
+    All implementations must support at least 3 iterations
+
+
+Issues
+
+Revision History
+
+    Revision 3 (January 30, 2008)
+      - Correction for tilingMode
+    Revision 2 (January 28, 2008)
+      - Promote to KHR from NDS
+    Revision 1 (August 1, 2007)
+      - Original Release
+

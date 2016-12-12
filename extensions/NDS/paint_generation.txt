@@ -1,0 +1,217 @@
+Name
+
+    NDS_paint_generation
+
+Name Strings
+
+    VG_NDS_paint_generation
+
+Contributors
+
+    Ray Taylor
+    James Walker
+
+Contacts
+
+    James Walker, NDS   (jwalker 'at' ndsuk.com)
+
+Version
+
+    Revision 1 (September 14, 2007)
+
+Number
+
+    OpenVG Extension #4
+
+Status
+
+    Published
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+
+    This extension is written against the wording of the OpenVG 1.0
+    Specification.
+
+IP Status
+
+    No known IP issues
+
+Overview
+
+    This extension is designed to support extended paint generation for vgDrawPath
+    and vgDrawImage.
+
+    OpenVG 1.0 supports gradient paint generation for non-linear color space in
+    pre-multiplied and non pre-multiplied forms (sRGBA and sRGBA_PRE). This
+    extension extends gradient paint generation to include the linear color space
+    allowing gradients to be interpolated in lRGBA and lRGBA_PRE color spaces.
+
+    This extension specifies an additional color transform stage for paint
+    generation. This color transform allows a full 5x4 color transform matrix to
+    be specified for a paint object. This color transform allows paint colors to
+    be adjusted without recalculation of color values. Although solid paint, and
+    in some implementations gradient paint, can have the color transform applied
+    to the color values above the OpenVG API with no performance drop, this is
+    not the case for pattern paint generation, or vgDrawImage operations, which
+    would require new images to be generated and the color transform applied
+    using vgColorMatrix. This is costly in terms of performance, memory
+    footprint, and memory bandwidth. This extension removes these inefficiencies
+    and allows a consistent way of applying color transforms to all paint
+    generation.
+
+
+New Procedures and Functions
+
+    None
+
+New Tokens
+
+    None
+
+New Datatypes
+
+    None
+
+New Values for Existing Enumerated Datatypes
+
+    The VGPaintParamType enumeration is extended as follows:
+
+    VG_PAINT_COLOR_RAMP_LINEAR_NDS              0x1A10
+    VG_COLOR_MATRIX_NDS                         0x1A11
+    VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS         0x1A12
+
+    The VGImageMode enumeration is extended as follows:
+
+    VG_DRAW_IMAGE_COLOR_MATRIX_NDS              0x1F10
+
+Modifications to Chapter 9 of the OpenVG 1.0 Specification (Paint)
+
+    Within Section 9.1.3 Setting Paint Parameters:
+    Add the following to Table 10: VGPaintParamType Defaults
+        Parameter                   | Datatype      | Default Value
+        ____________________________|_______________|__________________________
+        VG_PAINT_COLOR_RAMP_        | VGboolean     | VG_FALSE
+        LINEAR_NDS                  |               |
+        ____________________________|_______________|__________________________
+        VG_COLOR_MATRIX_NDS         | VGfloat[20]   | {1.0f, 0.0f, 0.0f, 0.0f,
+                                    |               |  0.0f, 1.0f, 0.0f, 0.0f,
+                                    |               |  0.0f, 0.0f, 1.0f, 0.0f,
+                                    |               |  0.0f, 0.0f, 0.0f, 1.0f,
+                                    |               |  0.0f, 0.0f, 0.0f, 0.0f}
+        ____________________________|_______________|_________________________
+        VG_PAINT_COLOR_TRANSFORM_   | VGboolean     | VG_FALSE
+        LINEAR_NDS                  |               |
+        ____________________________|_______________|_________________________
+
+
+    Within Section 9.2 Color Paint:
+    after paragraph begining:
+        "Color paint uses a fixed color ..."
+    insert the following paragraphs:
+        "   If the VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS flag is set to VG_TRUE,
+        the color value is converted to linear color space (lRGBA), prior to
+        applying the color transform specified by VG_COLOR_MATRIX_NDS.
+        Otherwise the color transform specified by VG_COLOR_MATRIX_NDS is
+        applied to the color value in the non-linear color space (sRGBA)."
+
+    Within Section 9.3.3 Color Ramps:
+    after paragraph begining:
+        "If a color or alpha value ..."
+    insert the following paragraphs:
+        "   If the VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS flag is set to VG_TRUE,
+        color values at each stop are converted to linear color space (lRGBA),
+        prior to applying the color transform specified by VG_COLOR_MATRIX_NDS.
+        Otherwise the color transform specified by VG_COLOR_MATRIX_NDS is
+        applied to the color values at each stop in the non-linear color space
+        (sRGBA).
+
+            If the paints VG_PAINT_COLOR_RAMP_LINEAR_NDS flag is set to
+        VG_TRUE, color transformed color values at each stop are converted
+        to linear color space (lRGBA) prior to pre-multiplication and
+        interpolation. Otherwise color values are converted to the non-linear
+        color space (sRGBA) prior to pre-multiplication and interpolation."
+
+    change sentence:
+        "If the paint’s VG_PAINT_COLOR_RAMP_PREMULTIPLIED flag is set to
+        VG_TRUE, color and alpha values at each gradient stop are multiplied
+        together to form premultiplied sRGBA values prior to interpolation.
+        Otherwise, color and alpha values are processed independently."
+    to:
+        "If the paint’s VG_PAINT_COLOR_RAMP_PREMULTIPLIED flag is set to
+        VG_TRUE, color and alpha values at each gradient stop are multiplied
+        together to form premultiplied sRGBA or premultiplied lRGBA values
+        prior to interpolation. Otherwise, color and alpha values are
+        processed independently."
+
+    Within Section 9.4 Pattern Paint:
+    after paragraph begining:
+        "Interpolation may be performed between multiple pixels ..."
+    insert the following paragraphs:
+        "   If the VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS flag is set to VG_TRUE,
+        the interpolated pixel values are converted to linear color space
+        (lRGBA), prior to applying the color transform specified by
+        VG_COLOR_MATRIX_NDS. Otherwise the interpolated pixel values are
+        converted to non-linear color space (sRGBA), prior to applying the color
+        transform specified by VG_COLOR_MATRIX_NDS. Pixel values in premultiplied
+        alpha form are converted to non-premultiplied form prior to color
+        transform. If the pattern tiling mode is set to VG_TILE_FILL and the
+        VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS flag is set to VG_TRUE, the fill
+        color is converted from sRGBA to lRGBA prior to applying the color
+        transform specified by VG_COLOR_MATRIX_NDS."
+
+    After Section 9.4 Pattern Paint:
+    insert following section:
+        "9.5 Color Transform
+            A paint objects color transform matrix is set using vgSetParamter.
+        The VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS parameter takes a VGboolean value
+        and controls whether color and alpha values are transformed in linear
+        (lRGBA) or non-linear (sRGBA) color space. The VG_COLOR_MATRIX_NDS
+        paramter takes an array of twenty floating-point values supplied in the
+        order {m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32,
+        m03, m13, m23, m33, m04, m14, m24, m34}. The color transform computes
+        output colors as the linear combination of color and alpha values (R,
+        G, B, A) from the solid color, stop color, interpolated pixel
+        color, or tile fill color:
+
+            | Rct |   | m00 m01 m02 m03 | | R |   | m04 |
+            | Gct |   | m10 m11 m12 m13 | | G |   | m14 |
+            | Bct | = | m20 m21 m22 m23 |.| B | + | m24 |
+            | Act |   | m30 m31 m32 m33 | | A |   | m34 |
+
+        or
+
+            Rct = m00.R + m01.G + m02.B + m03.A + m04
+            Gct = m10.R + m11.G + m12.B + m13.A + m14
+            Bct = m20.R + m21.G + m22.B + m23.A + m24
+            Act = m30.R + m31.G + m32.B + m33.A + m34
+        "
+
+    Within Section 10.8:
+    After sub-heading VG_DRAW_IMAGE_MULTIPLY
+    insert following sub-heading and sub-section
+        "VG_DRAW_IMAGE_COLOR_MATRIX_NDS
+            When the VG_IMAGE_MODE parameter is set to VG_DRAW_IMAGE_COLOR_
+        MATRIX_NDS, the interpolated pixel values of the image being drawn
+        are converted to the non-premultipled color space specified by the
+        current paints (the VGPaint object defined for the VG_FILL_PATH paint mode)
+        VG_PAINT_COLOR_TRANSFORM_LINEAR_NDS parameter (linear lRGBA if set to
+        VG_TRUE or non-linear sRGBA otherwise). The converted values are then
+        color transformed by the matrix specified in the current paints
+        VG_COLOR_MATRIX_NDS parameter.
+            The result considered to be in the color space specified by VG_PAINT_
+        COLOR_TRANSFORM_LINEAR_NDS is used as the input to the current blend
+        function and normal blending takes place."
+
+New State
+
+    None
+
+Issues
+
+Revision History
+
+    Revision 1 (September 14, 2007)
+      - Original Release
+

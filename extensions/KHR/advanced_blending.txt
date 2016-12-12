@@ -1,0 +1,358 @@
+Name
+
+    KHR_advanced_blending
+
+Name Strings
+
+    VG_KHR_advanced_blending
+
+Contributors
+
+    Ray Taylor
+    James Walker
+
+Contacts
+
+    James Walker, NDS   (jwalker 'at' ndsuk.com)
+
+Version
+
+    Revision 3 (March 05, 2008)
+
+Number
+
+    OpenVG Extension #3
+
+Status
+
+    Published
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+
+    This extension is written against the wording of the OpenVG 1.0
+    Specification.
+
+IP Status
+
+    No known IP issues
+
+Overview
+
+    This extension specifies a larger set of blend modes than those in
+    OpenVG 1.0. These advanced modes include many supported in graphics
+    authoring tools & file formats, for example, the SVG 1.2 specification
+    (http://www.w3.org/TR/SVG12/) and the PDF 1.7 specification
+    (http://www.adobe.com/devnet/pdf/pdf_reference.html).
+
+    This extension references the following specification:
+
+    [1] Scalable Vector Graphics (SVG) 1.2, W3C Working Draft 27 October
+    2004 http://www.w3.org/TR/2004/WD-SVG12-20041027/
+
+    Copyright ©2004 W3C® (MIT, ERCIM, Keio), All Rights Reserved.
+    http://www.w3.org/Consortium/Legal/2002/copyright-documents-20021231
+
+    Status: W3C Last Call Working Draft of the Scalable Vector Graphics
+    (SVG) 1.2 specification.
+
+New Procedures and Functions
+
+    None
+
+New Tokens
+
+    None
+
+New Datatypes
+
+    None
+
+New Values for Existing Enumerated Datatypes
+
+    The VGBlendMode enumeration is extended as follows:
+
+    VG_BLEND_OVERLAY_KHR        0x2010
+    VG_BLEND_HARDLIGHT_KHR      0x2011
+    VG_BLEND_SOFTLIGHT_SVG_KHR  0x2012
+    VG_BLEND_SOFTLIGHT_KHR      0x2013
+    VG_BLEND_COLORDODGE_KHR     0x2014
+    VG_BLEND_COLORBURN_KHR      0x2015
+    VG_BLEND_DIFFERENCE_KHR     0x2016
+    VG_BLEND_SUBTRACT_KHR       0x2017
+    VG_BLEND_INVERT_KHR         0x2018
+    VG_BLEND_EXCLUSION_KHR      0x2019
+    VG_BLEND_LINEARDODGE_KHR    0x201a
+    VG_BLEND_LINEARBURN_KHR     0x201b
+    VG_BLEND_VIVIDLIGHT_KHR     0x201c
+    VG_BLEND_LINEARLIGHT_KHR    0x201d
+    VG_BLEND_PINLIGHT_KHR       0x201e
+    VG_BLEND_HARDMIX_KHR        0x201f
+    VG_BLEND_CLEAR_KHR          0x2020
+    VG_BLEND_DST_KHR            0x2021
+    VG_BLEND_SRC_OUT_KHR        0x2022
+    VG_BLEND_DST_OUT_KHR        0x2023
+    VG_BLEND_SRC_ATOP_KHR       0x2024
+    VG_BLEND_DST_ATOP_KHR       0x2025
+    VG_BLEND_XOR_KHR            0x2026
+
+Additions to Chapter 12 of the OpenVG 1.0 Specification (Blending)
+
+    Section 12.2 Porter-Duff Blending
+
+    Append the following rows to Table 13: Porter-Duff Blending Modes
+
+    |   Blend Mode      |   Fsrc        |   Fdst        |
+    |   Clear           |   0           |   0           |
+    |   Dst             |   0           |   1           |
+    |   Src out Dst     |   1 - adst    |   0           |
+    |   Dst out Src     |   0           |   1 - asrc    |
+    |   Src atop Dst    |   adst        |   1 - asrc    |
+    |   Dst atop Src    |   1 - adst    |   asrc        |
+    |   Src xor Dst     |   1 - adst    |   1 - asrc    |
+
+
+    Section 12.3 Additional Blending Modes
+
+    Append the following bullet paragraphs for each of the following
+    additional modes following the VG_BLEND_LIGHTEN paragraph:
+
+    *   VG_BLEND_OVERLAY_KHR - SVG 1.2 [1] defines this mode as:
+    "Multiplies or screens the colors, dependent on the destination
+    color. Source colors overlay the destination whilst preserving its
+    highlights and shadows. The destination color is not replaced, but
+    is mixed with the source color to reflect the lightness or darkness
+    of the destination".
+
+    *   VG_BLEND_HARDLIGHT_KHR - SVG 1.2 [1] defines this mode as:
+    "Multiplies or screens the colors, dependent on the source color
+    value. If the source color is lighter than 0.5, the destination is
+    lightened as if it were screened. If the source color is darker
+    than 0.5, the destination is darkened, as if it were multiplied.
+    The degree of lightening or darkening is proportional to the
+    difference between the source color and 0.5. If it is equal to 0.5
+    the destination is unchanged. Painting with pure black or white
+    produces black or white".
+
+    *   VG_BLEND_SOFTLIGHT_SVG_KHR - SVG 1.2 [1] defines this mode as:
+    "Darkens or lightens the colors, dependent on the source color
+    value. If the source color is lighter than 0.5, the destination is
+    lightened. If the source color is darker than 0.5, the destination
+    is darkened, as if it were burned in. The degree of darkening or
+    lightening is proportional to the difference between the source
+    color and 0.5. If it is equal to 0.5, the destination is unchanged.
+    Painting with pure black or white produces a distinctly darker or
+    lighter area, but does not result in pure black or white".
+
+    *   VG_BLEND_SOFTLIGHT_KHR - this is an alternative definition
+    of the softlight blendmode. This version is more commonly used by non
+    SVG authoring tools and renderers.
+
+    *   VG_BLEND_COLORDODGE_KHR - SVG 1.2 [1] defines this mode as:
+    "Brightens the destination color to reflect the source color. Painting
+    with black produces no change".
+
+    *   VG_BLEND_COLORBURN_KHR - SVG 1.2 [1] defines this mode as:
+    "Darkens the destination color to reflect the source color. Painting
+    with white produces no change".
+
+    *   VG_BLEND_DIFFERENCE_KHR - SVG 1.2 [1] defines this mode as:
+    "Subtracts the darker of the two constituent colors from the
+    lighter. Painting with white inverts the destination color.
+    Painting with black produces no change".
+
+    *   VG_BLEND_SUBTRACT_KHR - This mode subtracts src from dst,
+    clipping to zero if required.
+
+    *   VG_BLEND_INVERT_KHR - This mode blends an inverted version of
+    the dst with the original dst under control of src alpha.
+
+    *   VG_BLEND_EXCLUSION_KHR - SVG 1.2 [1] defines this mode as:
+    "Produces an effect similar to that of 'difference', but appears as
+    lower contrast. Painting with white inverts the destination color.
+    Painting with black produces no change".
+
+    *   VG_BLEND_LINEARDODGE_KHR - This mode is a combination of the color
+    dodge and screen modes. Sometimes refered to as Add mode (not the same
+    as additive mode).
+
+    *   VG_BLEND_LINEARBURN_KHR - This mode is a combination of the color
+    burn and multiply modes.
+
+    *   VG_BLEND_VIVIDLIGHT_KHR - This mode is a combination of the
+    color burn and color dodge modes; color burn is used to darken the
+    dst color if the src color is darker than mid-grey, color dodge is
+    used to lighten the dst color if the src color is lighter than mid-
+    grey.
+
+    *   VG_BLEND_LINEARLIGHT_KHR - This mode is a combination of the
+    linear burn and linear dodge modes; linear burn is used to darken the
+    dst color if the src color is darker than mid-grey, linear dodge is
+    used to lighten the dst color if the src color is lighter than mid-
+    grey.
+
+    *   VG_BLEND_PINLIGHT_KHR - This mode replaces colors depending on
+    the brightness of the src color; if is lighter than mid-grey and
+    the dst color is darker than the src color, or if the src color is
+    darker than mid-grey and the dst color is lighter than the src
+    color, then the src color is used, otherwise the dst color is used.
+
+    *   VG_BLEND_HARDMIX_KHR - This blend mode posterizes the
+    dst color and blends with the src color using Vivid Light mode, such
+    that the output consists of only the 6 primary colors (RGBCMY),
+    white, and black.
+
+    Append the following paragraph after the previous blend mode
+    description bullet paragraphs:
+
+    Note that to avoid divide by zero problems, in the blend modes equations
+    that follow, wherever a colour component would be divided by zero, then
+    the component value assumes the value zero.
+
+    Note also that for all the blend modes equations that follow, the
+    output color components are clamped within the range of zero &
+    alpha.
+
+    Append the following blending equations to Table 14: Additional
+    Blending Equations
+
+    VG_BLEND_OVERLAY_KHR
+
+    (2 * c'dst < adst) ?
+        (2 * c'src * c'dst + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (asrc * adst - 2 * (adst - c'dst) * (asrc - c'src) + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_HARDLIGHT_KHR
+
+    (2 * c'src < asrc) ?
+        (2 * c'src * c'dst + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (asrc * adst - 2 * (adst - c'dst) * (asrc - c'src) + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_SOFTLIGHT_SVG_KHR
+
+    (2 * c'src < asrc) ?
+        (c'dst * (asrc - (1 - c'dst / adst) * (2 * c'src - asrc)) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (8 * c'dst <= adst) ?
+            (c'dst * (asrc - (1 - c'dst / adst) * (2 * c'src - asrc) * (3 - 8 * c'dst / adst)) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (c'dst * asrc + (powf(c'dst / adst, 0.5) * adst - c'dst) * (2 * c'src - asrc) + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+
+    VG_BLEND_SOFTLIGHT_KHR
+
+    (2 * c'src < asrc) ?
+        (c'dst * asrc + c'dst * (1 - c'dst / adst) * (2 * c'src - asrc) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+		(4 * c'dst <= adst) ?
+            (c'dst * asrc + c'dst * ((16 * c'dst / adst - 12) * c'dst / adst + 3) * (2 * c'src - asrc) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (c'dst * asrc + (powf(c'dst / adst, 0.5) * adst - c'dst) * (2 * c'src - asrc) + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_COLORDODGE_KHR
+
+    (c'src < asrc) ?
+        (min((asrc * adst), c'dst * asrc / (1 - c'src / asrc)) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_COLORBURN_KHR
+
+    (c'src > 0) ?
+	    ((asrc * adst) - min((asrc * adst), (asrc * (asrc * (adst - c'dst) / c'src))) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_DIFFERENCE_KHR
+
+    c'src + c'dst - 2 * min(c'src * adst, c'dst * asrc)
+
+    VG_BLEND_SUBTRACT_KHR
+
+    max((c'dst - c'src), 0)
+
+    VG_BLEND_INVERT_KHR
+
+    (1 - asrc) * c'dst + asrc * (1 - c'dst)
+
+    VG_BLEND_EXCLUSION_KHR
+
+    (c'src * adst + c'dst * asrc - 2 * c'src * c'dst) + c'src * (1 - adst) + c'dst * (1 - asrc)
+
+    VG_BLEND_LINEARDODGE_KHR
+
+    (c'src * adst + c'dst * asrc <= asrc * adst) ?
+        (c'src + c'dst) :
+        (asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_LINEARBURN_KHR
+
+    (c'src * adst + c'dst * asrc > asrc * adst) ?
+        (c'src + c'dst - asrc * adst) :
+        (c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_VIVIDLIGHT_KHR
+    
+    (2 * c'src < asrc) ?
+        (c'src > 0) ?
+            ((asrc * adst) - min((asrc * adst), (asrc * (asrc * (adst - c'dst) / (2 * c'src)))) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (c'src < asrc) ?
+            (min((asrc * adst), c'dst * asrc / (2 * (1 - c'src / asrc))) + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    VG_BLEND_LINEARLIGHT_KHR
+
+    (2 * c'src * adst + c'dst * asrc > 2 * asrc * adst) ?
+        (asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        ((2 * c'src * adst + c'dst * asrc > asrc * adst) ?
+            (2 * c'src * adst + c'dst * asrc - asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (c'src * (1 - adst) + c'dst * (1 - asrc)))
+
+    VG_BLEND_PINLIGHT_KHR
+
+    (2 * c'src * adst - c'dst * asrc > asrc * adst) ?
+        ((2 * c'src < asrc) ?
+            (c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (2 * c'src * adst - asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc))) :
+        ((2 * c'src * adst < c'dst * asrc) ?
+            (2 * c'src * adst + c'src * (1 - adst) + c'dst * (1 - asrc)) :
+            (c'dst * asrc + c'src * (1 - adst) + c'dst * (1 - asrc)))
+
+    VG_BLEND_HARDMIX_KHR
+
+    (c'src * adst + c'dst * asrc < asrc * adst) ?
+        (c'src * (1 - adst) + c'dst * (1 - asrc)) :
+        (asrc * adst + c'src * (1 - adst) + c'dst * (1 - asrc))
+
+    Add note below to Table 14: Additional Blending Equations
+
+    These equations have been specified using premultiplied src & dst colors,
+    c'src & c'dst (primarily to minimise the length of the equations).
+    Non-premultiplied versions of these equations can be obtained by
+    multiplying the appropriate alpha value i.e. c' = a * c
+
+    Section 12.5 Setting the Blend Mode
+
+    Add the extended values for the VGBlendMode enumeration as defined
+    previously in this document.
+
+New Errors
+
+    None
+
+New State
+
+    None
+
+Issues
+
+Revision History
+
+    Revision 3 (march 05, 2008)
+        - fixed equation errors in:
+        VG_BLEND_SOFTLIGHT_KHR
+        VG_BLEND_COLORDODGE_KHR
+        VG_BLEND_COLORBURN_KHR
+        VG_BLEND_VIVIDLIGHT_KHR
+        
+    Revision 2 (January 28, 2008)
+      - Promote to KHR from NDS 
+    Revision 1 (September 14, 2007)
+      - Original Release
+

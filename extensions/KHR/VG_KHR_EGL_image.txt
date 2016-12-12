@@ -1,0 +1,140 @@
+Name
+
+    KHR_EGL_image
+
+Name Strings
+
+    VG_KHR_EGL_image
+
+Contributors
+
+    Ruchika Dhingra
+    Gary King
+    Ignacio Llamas
+    Chris Wynn
+
+Contacts
+
+    Gary King, NVIDIA Corporation   (gking 'at' nvidia.com)
+
+Status
+
+    Approved.
+
+Version
+
+    Revision: #4
+
+Number
+
+    OpenVG Extension #1
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+ 
+    Requires EGL 1.2 and the EGL_KHR_image extension.
+
+    This extension is written against the wording of the OpenVG 1.0
+    Specification.
+
+Overview
+
+    This extension provides a mechanism for creating derived resources,
+    such as VGImages, from EGLImages.
+
+Glossary
+
+    Please see the EGL_KHR_image specification for a definition of terms
+    used by this extension.
+
+New Types
+
+    /*
+     * VGEGLImageKHR is an opaque handle to an EGLImage
+     */
+    typedef void* VGeglImageKHR;
+
+New Procedures and Functions
+
+    VGImage CreateEGLImageTargetKHR(VGeglImageKHR image);
+
+New Tokens
+
+    None.
+
+Additions to Chapter 11 of the OpenVG 1.0 Specification (Images)
+
+    In Section 11.3, page 105, add the following text after the
+    paragraph defining vgCreateImage:
+
+    "vgCreateEGLImageTargetKHR
+
+      vgCreateEGLImageTarget creates an EGLImage target VGImage
+      object from the provided EGLImage <image>.  <image> should be
+      of type EGLImageKHR, cast into the type VGeglImageKHR.  Assuming
+      no errors are generated in this function, the resulting VGImage
+      will be an EGLImage target of the specified EGLImage <image>.
+      As a side-effect of the referencing operation, all of the pixel
+      data in the <buffer> used as the EGLImage source resource (i.e.,
+      the <buffer> parameter passed to the CreateImageKHR command that
+      returned <image>) will become undefined.
+
+
+      The resulting VGImage may be used normally by all OpenVG
+      operations, including the creation of child images.  All child
+      images of VGImages created using vgCreateEGLImageTargetKHR (and
+      their children, etc.) are also EGLImage targets, and will remain
+      EGLImage targets until destroyed by subsequent calls to
+      vgDestroyImage.
+
+      ERRORS
+
+      VG_UNSUPPORTED_IMAGE_FORMAT_ERROR
+      - if the OpenVG implementation is not able to create a VGImage
+        compatible with the provided VGeglImageKHR for an implementation-
+        dependent reason (this could be caused by, but not limited to,
+        reasons such as unsupported pixel formats, anti-aliasing quality,
+        etc.).
+
+      VG_ILLEGAL_ARGUMENT_ERROR
+      - if <image> is not a valid VGeglImageKHR.
+
+Issues
+
+    1.  Should it be legal behavior to create OpenVG child images from
+        parent images which are EGLImage targets?
+
+        RESOLVED:  Yes; this does not add significant implementation
+        complexity, so restricting VGImages created using
+        CreateEGLImageTargetKHR would be an unnecessary burden on application
+        developers.  All child images should also be EGLImage targets. 
+
+    2.  What about portability problems created by allowing
+        implementation-dependent failures?
+
+        UNRESOLVED:  See Issue 14 in EGL_KHR_image and issue 4 in
+        GL_KHR_EGL_image.
+
+    3.  Should pixel data in image arrays associated with eglImageKHR
+        objects used as EGLImage sources in calls to
+        CreateEGLImageTargetKHR result in undefined pixel data?
+
+        UNRESOLVED:  See Issue 4 in the GL_KHR_EGL_image specification.
+
+Revision History
+
+#4  (December 14, 2006)
+
+     - Changed requirement to egl 1.2 to include EGLClientBuffer type.
+
+#3   November 27, 2006
+
+     - Changed OES token to KHR
+
+#2   October 20, 2006
+
+     - Rewording phrasing regarding undefined pixel data as a result of
+       CreateEGLImageTargetOES
+
+#1    - Original Release

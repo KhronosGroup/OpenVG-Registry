@@ -1,0 +1,655 @@
+Name
+
+    KHR_parametric_filter
+
+Name Strings
+
+    VG_KHR_parametric_filter
+
+Contributors
+
+    Ray Taylor
+    James Walker
+
+Contacts
+
+    James Walker, NDS   (jwalker 'at' ndsuk.com)
+
+Version
+
+    Revision 3 (January 28, 2008)
+
+Number
+
+    OpenVG Extension #5
+
+Status
+
+    Published
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+
+    This extension relies on use of the existing OpenVG convolution filters to 
+    generate blurred versions of image assets. Alternatively, the 
+    KHR_iterative_average_blur extension may be used to perform asset blurring.
+
+    This extension is written against the wording of the OpenVG 1.0 Specification.
+
+IP Status
+
+    No known IP issues
+
+Overview
+
+    This extension is designed to enable the single pass generation of many
+    common blur effects including glow, drop shadow, and bevel. It is possible
+    to implement these effects using OpenVG 1.0 functions, but this can result
+    in high memory bandwidth and usage, and multiple flushes on the graphics
+    pipeline.
+
+New Procedures and Functions
+
+    VG_API_CALL void vgParametricFilterKHR(
+        VGImage dst,
+        VGImage src,
+        VGImage blur,
+        VGfloat strength,
+        VGfloat offsetX,
+        VGfloat offsetY,
+        VGbitfield filterFlags,
+        VGPaint highlightPaint,
+        VGPaint shadowPaint) ;
+
+    VGU_API_CALL VGUErrorCode vguDropShadowKHR(
+        VGImage dst,
+        VGImage src,
+        VGfloat dimX,
+        VGfloat dimY,
+        VGuint iterative,
+        VGfloat strength,
+        VGfloat distance,
+        VGfloat angle,
+        VGbitfield filterFlags,
+        VGbitfield allowedQuality,
+        VGuint shadowColorRGBA) ;
+
+
+    VGU_API_CALL VGUErrorCode vguGlowKHR(
+        VGImage dst,
+        VGImage src,
+        VGfloat dimX,
+        VGfloat dimY,
+        VGuint iterative,
+        VGfloat strength,
+        VGbitfield filterFlags,
+        VGbitfield allowedQuality,
+        VGuint glowColorRGBA) ;
+
+    VGU_API_CALL VGUErrorCode vguBevelKHR(
+        VGImage dst,
+        VGImage src,
+        VGfloat dimX,
+        VGfloat dimY,
+        VGuint iterative,
+        VGfloat strength,
+        VGfloat distance,
+        VGfloat angle,
+        VGbitfield filterFlags,
+        VGbitfield allowedQuality,
+        VGuint highlightColorRGBA,
+        VGuint shadowColorRGBA) ;
+
+    VGU_API_CALL VGUErrorCode vguGradientGlowKHR(
+        VGImage dst,
+        VGImage src,
+        VGfloat dimX,
+        VGfloat dimY,
+        VGuint iterative,
+        VGfloat strength,
+        VGfloat distance,
+        VGfloat angle,
+        VGbitfield filterFlags,
+        VGbitfield allowedQuality,
+        VGuint stopsCount,
+        const VGfloat* glowColorRampStops) ;
+
+    VGU_API_CALL VGUErrorCode vguGradientBevelKHR(
+        VGImage dst,
+        VGImage src,
+        VGfloat dimX,
+        VGfloat dimY,
+        VGuint iterative,
+        VGfloat strength,
+        VGfloat distance,
+        VGfloat angle,
+        VGbitfield filterFlags,
+        VGbitfield allowedQuality,
+        VGuint stopsCount,
+        const VGfloat* bevelColorRampStops) ;
+
+
+New Tokens
+
+    None
+
+New Datatypes
+
+    The VGPfTypeKHR enumeration is defined as follows:
+        VG_PF_OBJECT_VISIBLE_FLAG_KHR       (1 << 0)
+        VG_PF_KNOCKOUT_FLAG_KHR             (1 << 1)
+        VG_PF_OUTER_FLAG_KHR                (1 << 2)
+        VG_PF_INNER_FLAG_KHR                (1 << 3)
+
+New Values for Existing Enumerated Datatypes
+
+    The VGUErrorCode enumeration is extended as follows:
+        VGU_IMAGE_IN_USE_ERROR              0xF010
+
+Additions to Chapter 11 of the OpenVG 1.0 Specification (Image Filters)
+
+    After Section 11.5 Lookup Tables, add the following section:
+        "vgParametricFilterKHR
+            The vgParametricFilterKHR function follows all the OpenVG format
+        normalization rules defined in Section 11.1 of the OpenVG 1.0.1
+        specification. VG_FILTER_FORMAT_PREMULTIPLIED, VG_FILTER_FORMAT_LINEAR,
+        and VG_FORMAT_CHANNEL_MASK parameters are obeyed as with standard
+        OpenVG filters.
+            The vgParametricFilterKHR function defines destination
+        pixels based on a combination of a source image, a blurred image,
+        highlight and shadow colours, offsets and flags.
+            The vgParametricFilterKHR function allows the single pass
+        generation of many common blur effects including glow, drop shadow, and
+        bevel. It is possible to implement the vgParametricFilterKHR function
+        using OpenVG 1.0 functions, but this can result in high memory
+        bandwidth and footprint, and multiple flushes on the graphics pipelines.
+
+            The vgParametricFilterKHR function Blur effects are generated
+        hierarchically. First highlight and shadow effects are generated from
+        colouring spacially translated alpha values from the blur image.
+        These are then combined with the non-translated src image alpha channel
+        to produce an inner and outer effect. The inner and outer effects are
+        combined with the src image, controlled by inner, outer, knockout, and
+        objectVisible flags, to produce the final effect.
+            highlightPaint and shadowPaint may be VG_INVALID_HANDLE or handles
+        to paint objects having a vgPaintType of VG_PAINT_TYPE_COLOR, or
+        VG_PAINT_TYPE_LINEAR_GRADIENT. Paint objects with other values for
+        vgPaintType are invalid and result in a VG_ILLEGAL_ARGUMENT_ERROR
+        error.
+            If vgPaintType is VG_PAINT_TYPE_LINEAR_GRADIENT then the first
+        gradient stop shall have an alpha value of 0. Otherwise a
+        VG_ILLEGAL_ARGUMENT_ERROR error is generated.
+
+        Then highlight(alpha) and shadow(alpha) functions are defined as:
+
+            if highlightPaint = VG_INVALID_HANDLE
+                highlight(alpha)  = { 0, 0, 0, 0}
+            else if highlightPaint.vgPaintType = VG_PAINT_TYPE_COLOR
+                highlight(alpha) = Premultiplied(highlightPaint)*
+                                        (alpha*strength)
+            else if highlightPaint.vgPaintType = VG_PAINT_TYPE_LINEAR_GRADIENT
+                highlight(alpha) = highlightPaint.g(alpha*strength)
+
+            if shadowPaint = VG_INVALID_HANDLE
+                shadow (alpha) = { 0, 0, 0, 0}
+            else if shadowPaint.vgPaintType = VG_PAINT_TYPE_COLOR
+                shadow (alpha) = Premultiplied(shadowPaint)*(alpha*strength)
+            else if shadowPaint.vgPaintType = VG_PAINT_TYPE_LINEAR_GRADIENT
+                shadow(alpha) = shadowPaint.g(alpha*strength)
+
+        where:
+            colour1 * alpha is the pre-multiplied components of colour1
+                multiplied by alpha.
+            paint.g(r) is the value of the color gradient for ratio r.
+
+        Each destination pixel has an associated highlightPixel and
+        shadowPixel, derived from translations of blur as follows:
+
+            highlightPixel(x, y) = highlight(max(hblur(x, y) - sblur(x, y), 0))
+            shadowPixel(x, y) = shadow(max(sblur(x, y) - hblur(x, y), 0))
+            inverseShadowPixel(x, y) = shadow(1.0 -
+                                            max(sblur(x, y) - hblur(x, y), 0))
+        where:
+            hblur(x, y) = blur(x+offsetX, y+offsetY).a
+            sblur(x, y) = blur(x-offsetX, y-offsetY).a
+        and:
+            blur(x, y).a is the alpha channel value of the blur image at offset
+                x, y.
+
+        From highlightPixel and shadowPixel, the innerEffect and outerEffect
+        are calculated as follows:
+
+            outerEffect(x, y) = highlightPixel(x, y) + shadowPixel(x, y)
+            if(highlightPaint = VG_INVALID_HANDLE)
+                innerEffect(x, y) = inverseShadowPixel(x, y)
+            else
+                innerEffect (x, y) = highlightPixel(x, y) + shadowPixel(x, y)
+        where:
+            colour1 + colour2 is the additive blend of colour1 and colour2.
+
+        The alpha multipliers for the innerEffect(x, y), outerEffect(x, y), and
+        src(x, y) values are calculated as follows:
+            if inner = VG_TRUE
+                innerAlpha = src(x, y).a
+            else
+                innerAlpha = 0;
+
+            if knockout = VG_FALSE and objectVisible = VG_TRUE
+                if inner = VG_TRUE
+                    objectAlpha = (1 – InnerEffect(x, y).a);
+                else
+                    objectAlpha = 1;
+            else
+                objectAlpha = 0;
+
+            if outer  = VG_TRUE
+                if knockout = VG_TRUE or objectVisible = VG_TRUE
+                    outerAlpha = 1 - src(x, y).a
+                else
+                    outerAlpha = 1
+            else
+                outerAlpha = 0
+
+        where:
+            image(x, y).a is the alpha channel value of the image at offset
+                x, y.
+
+        Finally the destination pixel is defined as:
+
+            dst(x, y) = (innerAlpha x innerEffect(x, y)) +
+                        (objectAlpha x src(x, y)) +
+                        (outerAlpha x outerEffect(x, y))
+        where:
+            colour1 + colour2 is the additive blend of colour1 and colour2.
+            colour1 x alpha is the pre-multiplied components of colour1
+                multiplied by alpha.
+
+        Errors:
+        VG_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not
+            shared with the current context.
+        VG_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VG_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+        -   highlightPaint or shadowPaint is not VG_INVALID_HANDLE and has a
+            vgPaintType other than VG_PAINT_TYPE_COLOR, or
+            VG_PAINT_TYPE_LINEAR_GRADIENT
+        -   highlightPaint or shadowPaint is not VG_INVALID_HANDLE and has a
+            vgPaintType of VG_PAINT_TYPE_LINEAR_GRADIENT and the first stop
+            color has an alpha value other than 0.
+        "
+
+Additions to Chapter 16 of the OpenVG 1.0 Specification (The VGU Utility
+Library)
+
+    After Section 16.2 Image Warping, add the following section:
+
+        "16.3 Image Filtering
+
+        vguDropShadowEXT
+        The vguDropShadowEXT function applies a drop shadow effect to the
+        VGImage src, and writes the result to VGImage dst. This is equivalent
+        to the following pseudo-code:
+
+            vgGetError();   //clear the error state
+
+            dx = distance*cos(angle);
+            dy = distance*sin(angle);
+            VGPaint paintSH = vgCreatePaint();
+            vgSetColor(paintSH, shadowColorRGBA);
+
+            width = vgGetParameteri(src, VG_IMAGE_WIDTH);
+            height = vgGetParameteri(src, VG_IMAGE_HEIGHT);
+
+            VGImage blur = vgCreateImage(VG_A_8, width, height, allowedQuality);
+            vgIterativeAverageBlurKHR(blur, src, dimX, dimY, iterative, VG_TILE_PAD);
+
+            vgParametricFilterKHR(  dst,
+                                    src,
+                                    blur,
+                                    strength,
+                                    dx,
+                                    dy,
+                                    filterFlags,
+                                    VG_INVALID_HANDLE,
+                                    paintSH);
+            vgDestroyImage(blur);
+            vgDestroyPaint(paintSH);
+
+            VGErrorCode error = vgGetError();
+            if(error == VG_BAD_HANDLE_ERROR)
+                return VGU_BAD_HANDLE_ERROR;
+            if(error == VG_IMAGE_IN_USE_ERROR)
+                return (VGUErrorCode)VGU_IMAGE_IN_USE_ERROR;
+            if(error == VG_ILLEGAL_ARGUMENT_ERROR)
+                return VGU_ILLEGAL_ARGUMENT_ERROR;
+            return VGU_NO_ERROR;
+
+        where:
+            vgIterativeAverageBlurKHR is as defined in KHR extension
+                KHR_iterative_average_blur or is implemented by appropriate 
+                calls to existing OpenVG convolution filters.
+
+        Errors:
+        VGU_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not shared
+            with the current context.
+        VGU_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VGU_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+
+        vguGlowEXT
+        The vguGlowEXT function applies a glow effect to the VGImage src, and
+        writes the result to VGImage dst. This is equivalent to the following
+        pseudo-code:
+
+            vgGetError();   //clear the error state
+
+            VGPaint paintGlow = vgCreatePaint();
+            vgSetColor(paintGlow, glowColorRGBA);
+
+            width = vgGetParameteri(src, VG_IMAGE_WIDTH);
+            height = vgGetParameteri(src, VG_IMAGE_HEIGHT);
+
+            VGImage blur = vgCreateImage(VG_A_8, width, height, allowedQuality);
+            vgIterativeAverageBlurKHR(blur, src, dimX, dimY, iterative, VG_TILE_PAD);
+
+            vgParametricFilterKHR(  dst,
+                                    src,
+                                    blur,
+                                    strength,
+                                    0,
+                                    0,
+                                    filterFlags,
+                                    VG_INVALID_HANDLE,
+                                    paintGlow);
+            vgDestroyImage(blur);
+            vgDestroyPaint(paintGlow);
+
+            VGErrorCode error = vgGetError();
+            if(error == VG_BAD_HANDLE_ERROR)
+                return VGU_BAD_HANDLE_ERROR;
+            if(error == VG_IMAGE_IN_USE_ERROR)
+                return (VGUErrorCode)VGU_IMAGE_IN_USE_ERROR;
+            if(error == VG_ILLEGAL_ARGUMENT_ERROR)
+                return VGU_ILLEGAL_ARGUMENT_ERROR;
+            return VGU_NO_ERROR;
+
+        where:
+            vgIterativeAverageBlurKHR is as defined in KHR extension
+                KHR_iterative_average_blur or is implemented by appropriate 
+                calls to existing OpenVG convolution filters.
+
+        Errors:
+        VGU_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not shared
+            with the current context.
+        VGU_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VGU_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+
+        vguBevelEXT
+        The vguBevelEXT function applies a bevel effect to the VGImage src, and
+        writes the result to VGImage dst. This is equivalent to the following
+        pseudo-code:
+
+            vgGetError();   //clear the error state
+
+            dx = distance*cos(angle);
+            dy = distance*sin(angle);
+            VGPaint paintSH = vgCreatePaint();
+            VGPaint paintHL = vgCreatePaint();
+            vgSetColor(paintHL, highlightColorRGBA);
+            vgSetColor(paintSH, shadowColorRGBA);
+            width = vgGetParameteri(src, VG_IMAGE_WIDTH);
+            height = vgGetParameteri(src, VG_IMAGE_HEIGHT);
+
+            VGImage blur = vgCreateImage(VG_A_8, width, height, allowedQuality);
+            vgIterativeAverageBlurKHR(blur, src, dimX, dimY, iterative, VG_TILE_PAD);
+
+            vgParametricFilterKHR(  dst,
+                                    src,
+                                    blur,
+                                    strength,
+                                    dx,
+                                    dy,
+                                    filterFlags,
+                                    paintHL,
+                                    paintSH);
+            vgDestroyImage(blur);
+            vgDestroyPaint(paintHL);
+            vgDestroyPaint(paintSH);
+
+            VGErrorCode error = vgGetError();
+            if(error == VG_BAD_HANDLE_ERROR)
+                return VGU_BAD_HANDLE_ERROR;
+            if(error == VG_IMAGE_IN_USE_ERROR)
+                return (VGUErrorCode)VGU_IMAGE_IN_USE_ERROR;
+            if(error == VG_ILLEGAL_ARGUMENT_ERROR)
+                return VGU_ILLEGAL_ARGUMENT_ERROR;
+            return VGU_NO_ERROR;
+
+        where:
+            vgIterativeAverageBlurKHR is as defined in KHR extension
+                KHR_iterative_average_blur or is implemented by appropriate 
+                calls to existing OpenVG convolution filters.
+
+        Errors:
+        VGU_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not shared
+            with the current context.
+        VGU_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VGU_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+
+        vguGradientGlowEXT
+        The vguGradientGlowEXT function applies a graduated glow effect to the
+        VGImage src, and writes the result to VGImage dst. This is equivalent
+        to the following pseudo-code:
+
+            vgGetError();   //clear the error state
+
+            dx = distance*cos(angle*PI/180.0f);
+            dy = distance*sin(angle*PI/180.0f);
+
+            VGPaint paintGlow = vgCreatePaint();
+            vgSetParameterfv(paintGlow, VG_PAINT_COLOR_RAMP_STOPS, stopsCount*5, glowColorRampStops);
+            vgSetParameteri(paintGlow, VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);
+            vgSetParameteri(paintGlow, VG_PAINT_TYPE, VG_PAINT_TYPE_LINEAR_GRADIENT);
+            vgSetParameteri(paintGlow, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, VG_FALSE);
+            width = vgGetParameteri(src, VG_IMAGE_WIDTH);
+            height = vgGetParameteri(src, VG_IMAGE_HEIGHT);
+
+            VGImage blur = vgCreateImage(VG_A_8, width, height, allowedQuality);
+            vgIterativeAverageBlurKHR(blur, src, dimX, dimY, iterative, VG_TILE_PAD);
+
+            vgParametricFilterKHR(  dst,
+                                    src,
+                                    blur,
+                                    strength,
+                                    -(dx),
+                                    -(dy),
+                                    filterFlags,
+                                    paintGlow,
+                                    VG_INVALID_HANDLE);
+            vgDestroyImage(blur);
+            vgDestroyPaint(paintGlow);
+
+            VGErrorCode error = vgGetError();
+            if(error == VG_BAD_HANDLE_ERROR)
+                return VGU_BAD_HANDLE_ERROR;
+            if(error == VG_IMAGE_IN_USE_ERROR)
+                return (VGUErrorCode)VGU_IMAGE_IN_USE_ERROR;
+            if(error == VG_ILLEGAL_ARGUMENT_ERROR)
+                return VGU_ILLEGAL_ARGUMENT_ERROR;
+            return VGU_NO_ERROR;
+
+        where:
+            vgIterativeAverageBlurKHR is as defined in KHR extension
+                KHR_iterative_average_blur or is implemented by appropriate 
+                calls to existing OpenVG convolution filters.
+
+        Errors:
+        VGU_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not shared
+            with the current context.
+        VGU_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VGU_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+
+        vguGradientBevelEXT
+        The vguGradientBevelEXT function applies a graduated bevel effect to
+        the VGImage src, and writes the result to VGImage dst. This is
+        equivalent to the following pseudo-code:
+
+            vgGetError();   //clear the error state
+
+            dx = distance*cos(angle);
+            dy = distance*sin(angle);
+            midPos = 0;
+            bAddStop = false;
+            for (midPos = 0; midPos < (int)stopsCount; midPos++)
+            {
+                if(bevelColorRampStops[5*midPos] == 0.5f)
+                {
+                    break;
+                }
+                if(bevelColorRampStops[5*midPos] > 0.5f)
+                {
+                    // Ensure that both colour ramps start with transparent black */
+                    bAddStop = true;
+                    break;
+                }
+            }
+
+            VGPaint paintSH = vgCreatePaint();
+            VGfloat* fStopAndColoursSH = new VGfloat[(midPos+1) * 5];
+            j = 0;
+            if(bAddStop)
+            {
+                fStopAndColoursSH[5 * j + 0] = 0.0f;
+                fStopAndColoursSH[5 * j + 1] = 0.0f;
+                fStopAndColoursSH[5 * j + 2] = 0.0f;
+                fStopAndColoursSH[5 * j + 3] = 0.0f;
+                fStopAndColoursSH[5 * j + 4] = 0.0f;
+                j++;
+            }
+            for (int i = midPos-(bAddStop ? 1 : 0); i >= 0; i--)
+            {
+                fStopAndColoursSH[5 * j + 0] = 2 * (0.5f - bevelColorRampStops[5 * i + 0]);
+                fStopAndColoursSH[5 * j + 1] = bevelColorRampStops[5 * i + 1];
+                fStopAndColoursSH[5 * j + 2] = bevelColorRampStops[5 * i + 2];
+                fStopAndColoursSH[5 * j + 3] = bevelColorRampStops[5 * i + 3];
+                fStopAndColoursSH[5 * j + 4] = bevelColorRampStops[5 * i + 4];
+                j++;
+            }
+            vgSetParameterfv(paintSH, VG_PAINT_COLOR_RAMP_STOPS, (midPos+1) * 5, fStopAndColoursSH);
+            vgSetParameteri(paintSH, VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);
+            vgSetParameteri(paintSH, VG_PAINT_TYPE, VG_PAINT_TYPE_LINEAR_GRADIENT);
+            vgSetParameteri(paintSH, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, VG_FALSE);
+
+            VGPaint paintHL = vgCreatePaint();
+            VGfloat* fStopAndColoursHL = new VGfloat[((bAddStop ? 1 : 0)+stopsCount-midPos) * 5];
+            j = 0;
+            if(bAddStop)
+            {
+                fStopAndColoursHL[5 * j + 0] = 0.0f;
+                fStopAndColoursHL[5 * j + 1] = 0.0f;
+                fStopAndColoursHL[5 * j + 2] = 0.0f;
+                fStopAndColoursHL[5 * j + 3] = 0.0f;
+                fStopAndColoursHL[5 * j + 4] = 0.0f;
+                j++;
+            }
+            for (int i = midPos; i < (int)stopsCount; i++)
+            {
+                fStopAndColoursHL[5 * j + 0] = 2 * (bevelColorRampStops[5 * i + 0] - 0.5f);
+                fStopAndColoursHL[5 * j + 1] = bevelColorRampStops[5 * i + 1];
+                fStopAndColoursHL[5 * j + 2] = bevelColorRampStops[5 * i + 2];
+                fStopAndColoursHL[5 * j + 3] = bevelColorRampStops[5 * i + 3];
+                fStopAndColoursHL[5 * j + 4] = bevelColorRampStops[5 * i + 4];
+                j++;
+            }
+            vgSetParameterfv(paintHL, VG_PAINT_COLOR_RAMP_STOPS, ((bAddStop ? 1 : 0)+stopsCount-midPos) * 5, fStopAndColoursHL);
+            vgSetParameteri(paintHL, VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);
+            vgSetParameteri(paintHL, VG_PAINT_TYPE, VG_PAINT_TYPE_LINEAR_GRADIENT);
+            vgSetParameteri(paintHL, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, VG_FALSE);
+
+            width = vgGetParameteri(src, VG_IMAGE_WIDTH);
+            height = vgGetParameteri(src, VG_IMAGE_HEIGHT);
+
+            VGImage blur = vgCreateImage(VG_A_8, width, height, allowedQuality);
+            vgIterativeAverageBlurKHR(blur, src, dimX, dimY, iterative, VG_TILE_PAD);
+
+            vgParametricFilterKHR(  dst,
+                                    src,
+                                    blur,
+                                    strength,
+                                    dx,
+                                    dy,
+                                    filterFlags,
+                                    paintHL,
+                                    paintSH);
+            vgDestroyImage(blur);
+
+            vgDestroyPaint(paintHL);
+            vgDestroyPaint(paintSH);
+            delete[] fStopAndColoursSH;
+            delete[] fStopAndColoursHL;
+
+            VGErrorCode error = vgGetError();
+            if(error == VG_BAD_HANDLE_ERROR)
+                return VGU_BAD_HANDLE_ERROR;
+            if(error == VG_IMAGE_IN_USE_ERROR)
+                return (VGUErrorCode)VGU_IMAGE_IN_USE_ERROR;
+            if(error == VG_ILLEGAL_ARGUMENT_ERROR)
+                return VGU_ILLEGAL_ARGUMENT_ERROR;
+            return VGU_NO_ERROR;
+
+        where:
+            vgIterativeAverageBlurKHR is as defined in KHR extension
+                KHR_iterative_average_blur or is implemented by appropriate 
+                calls to existing OpenVG convolution filters.
+
+        Errors:
+        VGU_BAD_HANDLE_ERROR
+        -   If either dst or src is not a valid image handle, or is not shared
+            with the current context.
+        VGU_IMAGE_IN_USE_ERROR
+        -   If either dst or src is currently a rendering target.
+        VGU_ILLEGAL_ARGUMENT_ERROR
+        -   If src and dst overlap.
+        -   If tilingMode is not one of the values from the VGTilingMode
+            enumeration.
+        "
+
+New State
+
+    None
+
+Issues
+
+Revision History
+
+    Revision 3 (January 28, 2008)
+      - Update dependencies
+    Revision 2 (January 28, 2008)
+      - Promote to KHR from NDS 
+    Revision 1 (September 14, 2007)
+      - Original Release
+

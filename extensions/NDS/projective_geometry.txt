@@ -1,0 +1,816 @@
+Name
+
+    NDS_projective_geometry
+
+Name Strings
+
+    VG_NDS_projective_geometry
+
+Contributors
+
+    Ray Taylor
+    James Walker
+
+Contacts
+
+    James Walker, NDS   (jwalker 'at' ndsuk.com)
+
+Version
+
+    Revision 3 (March 7, 2008)
+
+Number
+
+    OpenVG Extension #7
+
+Status
+
+    Published
+
+Dependencies
+
+    Requires OpenVG version 1.0 or later.
+
+    This extension is written against the wording of the OpenVG 1.0
+    Specification.
+
+IP Status
+
+    No known IP issues
+
+Overview
+
+    This extension is designed to support projective transformations for path
+    geometries, stroke paints, and fill paints.
+
+    OpenVG 1.0 supports projective transformation for the image-user-to-surface
+    matrix used by vgDrawImage, but not for the path-user-to-surface,
+    fill-paint-to-user, or stroke-paint-to-user matrices. Rendering a path to an
+    image, and then using vgDrawImage to achieve a projective transform is
+    inefficient and substantially increases memory footprint and memory
+    bandwidth, and may also produce a lowering in quality.
+
+    OpenVG 1.0 also places restrictions on multiply and stencil draw image
+    modes. If a projective matrix is provided for the image-user-to-surface
+    matrix, the image mode is ignored and the "normal" image mode is used. This
+    removes the need for projective paint look up and simplifies implementation,
+    but reduces the flexibility of OpenVG.
+
+    This extension addresses the above problems in a manor which allows
+    backwards compatibility with the wording of the OpenVG 1.0 specification.
+
+New Procedures and Functions
+
+    VG_API_CALL void vgProjectiveMatrixNDS(VGboolean enable) ;
+    
+	VGU_API_CALL VGUErrorCode vguTransformClipLineNDS(
+		const VGfloat Ain, 
+		const VGfloat Bin, 
+		const VGfloat Cin, 
+		const VGfloat* matrix, 
+		const VGboolean inverse, 
+		VGfloat* Aout, 
+		VGfloat* Bout, 
+		VGfloat* Cout);
+    
+New Tokens
+
+	VG_CLIP_MODE_NDS							0x1180
+	VG_CLIP_LINES_NDS							0x1181
+	VG_MAX_CLIP_LINES_NDS                       0x1182
+
+New Datatypes
+
+	The VGClipModeNds enumeration is defined as follows:
+	
+	VG_CLIPMODE_NONE_NDS                        0x3000
+	VG_CLIPMODE_CLIP_CLOSED_NDS                 0x3001
+	VG_CLIPMODE_CLIP_OPEN_NDS                   0x3002
+	VG_CLIPMODE_CULL_NDS                        0x3003
+
+New Values for Existing Enumerated Datatypes
+
+    The VGPathSegment enumeration is extended as follows:
+
+    VG_RQUAD_TO_NDS                ( 13 << 1 )
+    VG_RCUBIC_TO_NDS               ( 14 << 1 )
+
+    The VGPathCommand enumeration is extended as follows:
+
+    VG_RQUAD_TO_ABS_NDS            (VG_RQUAD_TO_NDS  | VG_ABSOLUTE)
+    VG_RQUAD_TO_REL_NDS            (VG_RQUAD_TO_NDS  | VG_RELATIVE)
+    VG_RCUBIC_TO_ABS_NDS           (VG_RCUBIC_TO_NDS | VG_ABSOLUTE)
+    VG_RCUBIC_TO_REL_NDS           (VG_RCUBIC_TO_NDS | VG_RELATIVE)
+
+Modifications to Chapter 2 of the OpenVG 1.0 Specification (The OpenVG Pipeline)
+
+    Within Figure 1: The OpenVG Pipeline, 
+    change Stage 3:
+		"Stage 3: Transformation"
+	to
+		"Stage 3: Clipping and Transformation"
+
+    change Stage 5:
+		"Stage 5: Clipping and Masking"
+	to
+		"Stage 5: Scissoring and Masking"
+		
+	Within Section 2.3 Stage 3: Transformation:
+	change section title:
+		"Stage 3: Transformation"
+	to
+		"Stage 3: Clipping and Transformation"
+	
+	before paragraph beginning:
+		"The current path-user-to-surface transformation ..."
+	insert paragraph
+		"If clip mode is not VG_CLIPMODE_NONE_NDS the geometry of the current
+		path is clipped or culled by the current set of clipping lines. For an 
+		image, the outline of the image is clipped or culled.
+	
+	change sentence:
+		"The current path-user-to-surface transformation is applied to the 
+		geometry of the current path, producing drawing surface coordinates."
+	to:
+		"The current path-user-to-surface transformation is applied to the 
+		clipped geometry of the current path, producing drawing surface 
+		coordinates."
+	
+	change sentence:
+		"For an image, the outline of the image is transformed using the 
+		image-user-to-surface transformation."
+	to:
+		"For an image, the clipped outline of the image is transformed using the
+		image-user-to-surface transformation."
+
+	Within Section 2.5 Stage 5: Clipping and Masking:
+	change section title:
+		"Stage 5: Clipping and Masking"
+	to
+		"Stage 5: Scissoring and Masking"
+	
+
+Modifications to Chapter 4 of the OpenVG 1.0 Specification (The Drawing Context)
+
+    Within Table 3: State Elements of a Context:
+    following entry
+		"Scissoring | Current scissoring rectangles and enable/disable"
+	insert entry:
+		"Clipping | Current clipping lines and clipping mode"
+
+Modifications to Chapter 5 of the OpenVG 1.0 Specification (5 Setting API 
+Parameters)
+
+    Within Section 5.1 Context Parameter Types
+    within:
+		"VGParamType enumeration"
+    insert entries:
+		"VG_CLIP_MODE_NDS								= 0x1180,
+		"VG_CLIP_LINES_NDS								= 0x1181,
+		"VG_MAX_CLIP_LINES_NDS							= 0x1182,"
+    
+    Within Section 5.2.1 Default Context Parameter Values
+    
+	Within Table 4: Default Parameter Values for a Context
+	after entry:
+		"VG_SCISSOR_RECTS | VGint * | { } (array of length 0)"
+	insert entry:
+		"VG_CLIP_LINES_NDS | VGfloat * | { } (array of length 0)"
+	
+	after entry:
+		"VG_SCISSORING | VGboolean | { } VG_FALSE (disabled)"
+	insert entry:
+		"VG_CLIP_MODE_NDS | VGClipModeNds | { } VG_CLIPMODE_NONE_NDS (disabled)"
+		
+	change sentence:
+		"The read-only parameter values VG_MAX_SCISSOR_RECTS, VG_MAX_DASH_COUNT,
+		VG_MAX_KERNEL_SIZE, VG_MAX_SEPARABLE_KERNEL_SIZE, 
+		VG_MAX_GAUSSIAN_STD_DEVIATION, VG_MAX_COLOR_RAMP_STOPS, VG_MAX_IMAGE_WIDTH, 
+		VG_MAX_IMAGE_HEIGHT, VG_MAX_IMAGE_PIXELS, VG_MAX_IMAGE_BYTES, and VG_MAX_FLOAT
+		 are initialized to implementation-defined values."
+	to:
+		"The read-only parameter values VG_MAX_SCISSOR_RECTS, VG_MAX_CLIP_LINES_NDS,
+		VG_MAX_DASH_COUNT, VG_MAX_KERNEL_SIZE, VG_MAX_SEPARABLE_KERNEL_SIZE, 
+		VG_MAX_GAUSSIAN_STD_DEVIATION, VG_MAX_COLOR_RAMP_STOPS, VG_MAX_IMAGE_WIDTH, 
+		VG_MAX_IMAGE_HEIGHT, VG_MAX_IMAGE_PIXELS, VG_MAX_IMAGE_BYTES, and VG_MAX_FLOAT
+		 are initialized to implementation-defined values."
+	
+Modifications to Chapter 6 of the OpenVG 1.0 Specification (Rendering Quality
+and Antialiasing)
+
+    Within Section 6.5.1 Homogeneous Coordinates:
+    change sentence:
+        "Homogeneous coordinates are used in order to allow translation factors
+        to be included in the affine matrix formulation, as well as to allow
+        perspective effects for images."
+    to:
+        "Homogeneous coordinates are used in order to allow translation factors
+        to be included in the affine matrix formulation, as well as to allow
+        perspective effects for images, paints and paths (paints and paths
+        subject to vgProjectiveMatrixNDS)."
+    
+    Within Figure 3: Coordinates, Transformation, Clipping, and Scissoring
+    change title:
+		"Coordinates, Transformation, Clipping, and Scissoring"
+	to:
+		"Coordinates, Clipping/Culling, Transformation, and Scissoring"
+	
+	change label:
+		"Tu"
+	to:
+		"Clipping/Culling and Transform(Tu)"
+	
+	change label:
+		"Clipping and scissoring"
+	to:
+		"Scissoring"
+
+    Within Section 6.5.2 Affine Transformations:
+    change sentence:
+        "Gradients and patterns are subject to an additional affine
+        transformation mapping the coordinate system used to specify the
+        gradient parameters into user coordinates. The path-user-to-surface
+        transformation is then applied to yield surface coordinates."
+    to:
+        "Gradients and patterns are subject to an additional affine or
+        projective (subject to vgProjectiveMatrixNDS) transformation mapping the
+        coordinate system used to specify the gradient parameters into user
+        coordinates. The path-user-to-surface transformation is then applied to
+        yield surface coordinates."
+
+    Within Section 6.5.3 Projective (Perspective) Transformations:
+    change sentence:
+        "The vgDrawImage function uses a 3x3 projective (or perspective)
+        transformation matrix (representing the image-user-to-surface
+        transformation) with the following entries to transform from user
+        coordinates to surface coordinates:"
+    to:
+        "The vgDrawImage function and vgDrawPath function (vgDrawPath subject to
+        vgProjectiveMatrixNDS) uses a 3x3 projective (or perspective)
+        transformation matrix (representing the image-user-to-surface
+        transformation) with the following entries to transform from user
+        coordinates to surface coordinates:"
+
+    change sentence:
+        "Although OpenVG does not provide support for three-dimensional
+        coordinates, proper setting of the w matrix entries can simulate the
+        effect of placement of images in three dimensions, as well as other
+        warping effects."
+    to:
+        "Although OpenVG does not provide support for three-dimensional
+        coordinates, proper setting of the w matrix entries can simulate the
+        effect of placement of images and paths in three dimensions, as well as
+        other warping effects."
+
+    after last paragraph add:
+        "Unlike affine transformation, projective transformations of Bézier
+        splines and elliptic arcs do not result in curves of the same type.
+        Bézier splines and elliptic arcs must first be converted to rational
+        Bézier splines, or decomposed into straight line segments, prior to
+        transformation. The projective transformation of a rational Bézier
+        spline will result in a rational Bézier spline of equal order."
+
+    Within Section 6.6 Matrix Manipulation:
+    within vgLoadMatrix change sentence:
+        "However, if the targeted matrix is affine (i.e., the matrix mode is not
+        VG_MATRIX_IMAGE_USER_TO_SURFACE), the values { w0, w1, w2 } are ignored
+        and replaced by the values { 0, 0, 1 }, resulting in the affine matrix:"
+    to:
+        "However, if the targeted matrix is affine (i.e., the matrix mode is not
+        VG_MATRIX_IMAGE_USER_TO_SURFACE and vgProjectiveMatrixNDS has not
+        enabled projective matrices), the values { w0, w1, w2 } are ignored and
+        replaced by the values { 0, 0, 1 }, resulting in the affine matrix:"
+
+    within vgMultMatrix change sentence:
+        "However, if the targeted matrix is affine (i.e., the matrix mode is not
+        VG_MATRIX_IMAGE_USER_TO_SURFACE), the values { w0, w1, w2 } are ignored
+        and replaced by the values { 0, 0, 1 } prior to multiplication."
+    to:
+        "However, if the targeted matrix is affine (i.e., the matrix mode is not
+        VG_MATRIX_IMAGE_USER_TO_SURFACE and vgProjectiveMatrixNDS has not
+        enabled projective matrices), the values { w0, w1, w2 } are ignored and
+        replaced by the values { 0, 0, 1 } prior to multiplication."
+
+    Within Section 6.6 Matrix Manipulation, and the following below the vgRotate
+    entry:
+        vgProjectiveMatrixNDS
+
+        The vgProjectiveMatrixNDS enables, or disables, support for projective
+        matrices and modifies the behaviour of associated functions.
+
+        If the enable parameter is set to VG_FALSE, subsequent vgDrawImage,
+        vgDrawPath, vgLoadMatrix and vgMultMatrix function calls related to the
+        matrix currently specified by the matrix mode shall comply with the text
+        of OpenVG 1.0 specification.
+
+        If the matrix mode is VG_MATRIX_IMAGE_USER_TO_SURFACE, and the enable
+        parameter set to VG_TRUE, vgDrawImage shall respect the draw image mode
+        for all matrices, affine and projective.
+
+        If the matrix mode is VG_MATRIX_PATH_USER_TO_SURFACE,
+        VG_MATRIX_FILL_PAINT_TO_USER or VG_MATRIX_STROKE_PAINT_TO_USER,
+        subsequent vgDrawImage, vgDrawPath, vgLoadMatrix  and vgMultMatrix
+        function calls related to the matrix currently specified by the matrix
+        mode, shall treat the matrix as projective. This implies that
+        vgLoadMatrix and vgMultMatrix function shall not overwrite the values of
+        w0, w1, or w2.
+
+        The enable parameter only applies to the matrix specified by matrix
+        mode, and not to all matrices. This implies that an implementation must
+        store the value of enable for each matrix.
+
+        Errors:
+        None.
+
+    Within Section 7 Scissoring, Masking, and Clearing:
+	change title:
+		"7 Scissoring, Masking, and Clearing"
+	to:
+		"7 Clipping/Culling, Scissoring, Masking, and Clearing"
+		
+	before paragraph beginning:
+		"All drawing is clipped (restricted) to the bounds ..."
+	insert paragraph:
+		"All drawing may be clipped or culled by a set of clipping lines after
+		transformation, but prior to projective divide by w. Clipping lines
+		are defined in homogeneous surface coordinate system."
+		
+	before section 7.1 Scissoring insert following section:
+		"
+		7.a Clipping/Culling
+		  Drawing may be clipped or culled by a set of clipping lines during 
+		transformation. Clipping is enabled when the parameter VG_CLIP_MODE_NDS 
+		has the value VG_CLIPMODE_CLIP_CLOSED_NDS or VG_CLIPMODE_CLIP_OPEN_NDS.
+		Culling is enabled if parameter VG_CLIP_MODE_NDS has the value 
+		VG_CLIPMODE_CULL_NDS. Clipping may be disabled by either calling vgSeti
+		with a paramType argument of VG_CLIPPING_NDS and a value of 
+		VG_CLIPMODE_NONE_NDS, or by specifying no clipping lines through
+		VG_CLIP_LINES_NDS.
+
+		VG_MAX_CLIP_LINES_NDS
+		The VG_MAX_CLIP_LINES_NDS parameter contains the maximum number of 
+		clipping lines that may be supplied for the VG_CLIP_LINES_NDS parameter.
+		All implementations must support at least 6 clipping lines. If there is 
+		no implementation-defined limit, a value of VG_MAXINT may be returned. 
+		The value may be retrieved by calling vgGeti with a paramType argument 
+		of VG_MAX_CLIP_LINES_NDS:
+			VGint maxClippingLines = vgGeti(VG_MAX_CLIP_LINES_NDS);
+
+		Specifying Clipping Lines
+		Each clipping line is specified as an float triple of the form (a, b, 
+		c). The clipping lines are specified in the homogeneous surface 
+		coordinate system and are defined by the equation:
+			a*w.x + b*w.y + c*w >= 0
+		Clipping and culling are applied to geometry post transform, but prior 
+		to divide by w.
+		
+		If VG_CLIP_MODE_NDS has the value VG_CLIPMODE_CLIP_CLOSED_NDS all 
+		geometry not satisfying this equation is clipped (removed). Segments
+		crossing the clipping line should be subdivided such that the unclipped
+		section of the segment is unaffected. Clipped geometry is removed, but
+		must not affect filling of pixels within the non-clipped half-space. 
+		This may require path segments clipped by a clipping line to be 
+		replaced with a line segment running along the clipping line to 
+		maintain correct fill rule winding. This mode is most appropriate for 
+		clipping during vgDrawPath and vgDrawImage. It is also appropriate for 
+		vgTransformPath when the resulting path is to be filled. It may not 
+		be appropriate for vgTransformPath when the resulting path is to be 
+		stroked, as visible artefacts may appear along the clipping lines.
+		
+		If VG_CLIP_MODE_NDS has the value VG_CLIPMODE_CLIP_OPEN_NDS vgDrawPath
+		and vgDrawImage will apply clipping as if the value were
+		VG_CLIPMODE_CLIP_CLOSED_NDS.
+		
+		If vgTransformPath is called and VG_CLIP_MODE_NDS has the value 
+		VG_CLIPMODE_CLIP_OPEN_NDS all geometry not satisfying this equation is 
+		clipped (removed). Segments crossing the clipping line should be 
+		subdivided such that the unclipped section of the segment is 
+		unaffected. All clipped sections are removed and are not replaced. This
+		mode is appropriate for vgTransformPath when the resulting path is to 
+		be stroked, as no artefacts will appear along the clipping lines. It
+		may not be appropriate for vgTransformPath when the resulting path is
+		to be filled, as implicit closure of clipped paths may affect 
+		application of fill rules.
+		
+		If VG_CLIP_MODE_NDS has the value VG_CLIPMODE_CULL_NDS culling is 
+		applied. If any part of the path geometry lies in the clipped half
+		-space then the entire path is culled (removed). In some 
+		implementations culling may be considerably faster than clipping, but
+		can have a much greater visual impact.
+		
+		If clipping or culling is enabled and no valid clipping lines are 
+		present, no clipping or culling occurs and drawing proceeds as if 
+		VG_CLIP_MODE_NDS were set to VG_CLIPMODE_NONE_NDS. If more than 
+		VG_MAX_CLIP_LINES_NDS clipping lines are specified, those beyond the 
+		first VG_MAX_CLIP_LINES_NDS are discarded immediately (and will not be 
+		returned by vgGet). Clipping and culling conceptually occur post user 
+		to surface transform prior to projective divide by w in homogeneous 
+		surface space, and can be used in conjunction with projective 
+		transformations to prevent w <= 0 conditions or implementing viewing 
+		volume or window clipping.
+
+		#define NUM_CLIP_LINES 2
+		/* { a, b, c } Triples */
+		VGfloat params[3*NUM_CLIP_LINES] = { 1.0, 0.0, 0.0, -1.0, 0.0, 100.0};
+		vgSetiv(VG_CLIP_LINES_NDS, 3*NUM_CLIP_LINES, params);
+		"
+		
+	Within Section 7.2 Alpha Masking
+	change sentence:
+		"The mask alpha values are multiplied by the corresponding coverage 
+		values of each primitive being drawn in the clipping and masking stage 
+		(stage 5) of the rendering pipeline (see Section 2.5)."
+	to:
+		"The mask alpha values are multiplied by the corresponding coverage 
+		values of each primitive being drawn in the scissoring and masking 
+		stage (stage 5) of the rendering pipeline (see Section 2.5)."
+	
+    Within Section 8 Paths:
+    change sentence:
+        "Each segment command in the standard format may specify a move, a
+        straight line segment, a quadratic or cubic Bézier segment, or an
+        elliptical arc."
+    to:
+        "Each segment command in the standard format may specify a move, a
+        straight line segment, a quadratic or cubic Bézier segment, an
+        elliptical arc or a quadratic or cubic rational Bézier segment."
+
+Modifications to Chapter 8 of the OpenVG 1.0 Specification (Path)
+
+    following below the 8.4 Elliptical Arcs entry:
+
+    8.4a Rational Bézier Curves
+
+    Rational Bézier curves are related to Bézier curves, but use homogeneous
+    control point of the form {w(i)*x(i), w(i)*y(i), w(i)}. Control points are
+    not specified in this homogeneous form, but as a triple value of {x(i),
+    y(i), w(i)} and are converted to homogeneous form for transformation and
+    evaluation. The w(i) value is known as the weight of the control point, and
+    affect the contribution the control point makes to the spline. Rational
+    Bézier curves can be projectively transformed by multiplying the homogeneous
+    control points by the projective matrix.
+
+    Rational Bézier curves posses all the properties of Bézier curves with the
+    exception that the convex-hull property only applies if all weight values
+    are non-negative. As such the convex-hull property cannot be relied upon for
+    calculation of bounding boxes. Instead the maxima and minima of the partial
+    derivatives dx(t)/dt and dy(t)/dt can be used to determine values of t for
+    which x(t) and y(t) are at a maxima or minima.
+
+    8.4a.1 Conversion from Bézier curves
+
+    Bézier curves can be represented by rational Bézier curve of equal order by
+    simply specifying a value of one for the weight (w(i)) of each control
+    point. This allows the Bézier curve to be projectively transformed.
+
+    8.4a.2 Conversion from Elliptical Arcs
+
+    Unlike Bézier curves, rational Bézier curves can exactly represent
+    elliptical arcs. To convert from an elliptical arc, the arc should be
+    translated onto a unit circle.
+        Let:
+            ux(0)    = x coordinate of the translated elliptic arc start point.
+            uy(0)    = y coordinate of the translated elliptic arc start point.
+            ux(1)    = x coordinate of the translated elliptic arc end point.
+            uy(1)    = y coordinate of the translated elliptic arc end point.
+            alpha    = angle swept by arc.
+
+    For alpha not equal to PI, the quadratic rational Bézier representation of
+    the translated arc is given by:
+
+        qx(0) = ux(0)
+        qy(0) = uy(0)
+        qw(0) = 1
+
+        qx(1) = (uy(1)-uy(0))/(ux(0)*uy(1) - uy(0)*ux(1))
+        qy(1) = (ux(1)-ux(0))/(uy(0)*ux(1) - ux(0)*uy(1))
+        qw(1) = cos(alpha/2) for alpha < PI
+               -cos(alpha/2) for alpha > PI
+
+        qx(2) = ux(1)
+        qy(2) = uy(1)
+        qw(2) = 1
+
+    where:
+        cos(alpha/2) = sqrt((ux(0).ux(1) + uy(0).uy(1) + 1)/2)
+
+    The cubic rational Bézier representation of the translated arc is derived
+    using degree elevation, and is given by:
+
+        cx(0) = qx(0)
+        cy(0) = qy(0)
+        cw(0) = qw(0)
+
+        cx(1) = (qw(0)*qx(0) + 2*qw(1)*qx(1))/(qw(0) + 2*qw(1))
+        cy(1) = (qw(0)*qy(0) + 2*qw(1)*qy(1))/(qw(0) + 2*qw(1))
+        cw(1) = (qw(0) + 2*qw(1))/3
+
+        cx(2) = (2*qw(1)*qx(1) + qw(2)*qx(2))/(2*qw(1) + qw(2))
+        cy(2) = (2*qw(1)*qy(1) + qw(2)*qy(2))/(2*qw(1) + qw(2))
+        cw(2) = (2*qw(1) + qw(2))/3
+
+        cx(3) = qx(2)
+        cy(3) = qy(2)
+        cw(3) = qw(2)
+
+    The case where alpha exactly equals PI cannot be represented by a quadratic
+    rational Bézier as the control point coordinates tend to infinity. However a
+    cubic rational Bézier can be used, and is given by:
+
+        if clockwise arc
+            tx = (uy(0)-uy(1))
+            ty = (ux(1)-ux(0))
+        else is anti-clockwise arc
+            tx = (uy(1)-uy(0))
+            ty = (ux(0)-ux(1))
+
+        cx(0) = qx(0)
+        cy(0) = qy(0)
+        cw(0) = qw(0)
+
+        cx(1) = (ux(0) + tx)
+        cy(1) = (uy(0) + ty)
+        cw(1) = 1/3
+
+        cx(2) = (tx + ux(1))
+        cy(2) = (ty + uy(1))
+        cw(2) = 1/3
+
+        cx(3) = qx(2)
+        cy(3) = qy(2)
+        cw(3) = qw(2)
+
+    To constrain the coordinates of the control points it is recommended that
+    quadratic rational Bézier not be used to represent elliptical arcs where
+    alpha exceeds PI/2. For alpha larger than PI/2 the intermediate control
+    point coordinates will become very large and could result in overflow, or
+    mathematical inaccuracies.
+
+    8.4a.3 Quadratic Rational Bézier Curves
+
+    A quadratic rational Bézier is defined by three control points, {x(0), y(0),
+    w(0)} , {x(1), y(1), w(1)} and {x(2), y(2), w(2)}. The curve starts at
+    {x(0), y(0)} and ends at {x(2), y(2)}. The shape of the curve is influenced
+    by the placement of the internal control point {x(1), y(1)}, but the curve
+    does not usually pass through that point. The weight values of the control
+    points, w0, w1 and w2 affect also affect the shape of the curve, by
+    controlling the contribution/weight of a control point. Assuming non-
+    coincident control points, the tangent of the curve at the initial point
+    {x(0), y(0)} is aligned with and has the same direction as the vector
+    {w(1)*(x(1)-x(0))/w(0), w(1)*(y(1)-y(0))/w(0)}, and the tangent at the final
+    point {x(2), y(2)} is aligned with and has the same direction as
+    {w(1)*(x(2)-x(1))/w(2), w(1)*(y(2)-y(1))/w(2)}. The curve is defined by the
+    set of points {x(t), y(t)} as t varies from 0 to 1, where:
+
+    x(t) = (w(0)*x(0)*(1-t)*(1-t) + 2*w(1)*x(1)*(1-t)*t + w(2)*x(2)*t*t) /
+                (w(0)*(1-t)*(1-t) + 2*w(1)*(1-t)*t + w(2)*t*t)
+
+    y(t) = (w(0)*y(0)*(1-t)*(1-t) + 2*w(1)*y(1)*(1-t)*t + w(2)*y(2)*t*t) /
+                (w(0)*(1-t)*(1-t) + 2*w(1)*(1-t)*t + w(2)*t*t)
+
+    8.4a.4 Cubic Rational Bézier Curves
+
+    A cubic rational Bézier is defined by three control points, {x(0), y(0),
+    w(0)}, {x(1), y(1), w(1)}, {x(2), y(2), w(2)} and {x(3), y(3), w(3)}. The
+    curve starts at {x(0), y(0)} and ends at {x(3), y(3)}. The shape of the
+    curve is influenced by the placement of the internal control points {x(1),
+    y(1)} and {x(2), y(2)}, but the curve does not usually pass through these
+    points. The weight values of the control points, w0, w1 w2, and w3 affect
+    also affect the shape of the curve, by controlling the contribution/weight
+    of a control point. Assuming non-coincident control points, the tangent of
+    the curve at the initial point {x(0), y(0)} is aligned with and has the same
+    direction as the vector {w(1)*(x(1)-x(0))/w(0), w(1)*(y(1)-y(0))/w(0)},
+    and the tangent at the final point {x(3), y(3)} is aligned with and has the
+    same direction as {w(2)*(x(3)-x(2))/w(3), w(2)*(y(3)-y(2))/w(3)}. The curve
+    is defined by the set of points {x(t), y(t)} as t varies from 0 to 1, where:
+
+    x(t) = (w(0)*x(0)*(1-t)*(1-t)*(1-t) + 3*w(1)*x(1)*(1-t)*(1-t)*t +
+            3*w(2)*x(2)*(1-t)*t*t + w(3)*x(3)*t*t*t) /
+                (w(0)*(1-t)*(1-t)*(1-t) + 3*w(1)*(1-t)*(1-t)*t +
+                    3*w(2)*(1-t)*t*t + w(3)*t*t*t)
+
+    y(t) = (w(0)*y(0)*(1-t)*(1-t)*(1-t) + 3*w(1)*y(1)*(1-t)*(1-t)*t +
+            3*w(2)*y(2)*(1-t)*t*t + w(3)*y(3)*t*t*t) /
+                (w(0)*(1-t)*(1-t)*(1-t) + 3*w(1)*(1-t)*(1-t)*t +
+                    3*w(2)*(1-t)*t*t + w(3)*t*t*t)
+
+
+    Within Section 8.5.1 Path Segment Command Side Effect:
+    change sentence:
+        "Ellipse rh, rv, and rot parameters are unaffected by the use of
+        relative coordinates."
+    to:
+        "Ellipse rh, rv, and rot and rational Bézier w(0), w(1), w(2) and w(3)
+        parameters are unaffected by the use of relative coordinates."
+
+    Within Section 8.5.2 Segment Commands:
+    append to table:
+    Type    | Command    | Coordinates     | Values | Implicit | Side
+            |            |                 |        | Points   | Effects
+================================================================================
+Rational    | RQUAD_TO   | w(0),x(1),y(1), |        |          | (px,py)=(ox,oy)
+Quadratic   |            | w(1),x(2),y(2), |   7    |          |    =(x2,y2)
+            |            | w(2)            |        |          |
+--------------------------------------------------------------------------------
+Rational    | RCUBIC_TO  | w(0),x(1),y(1), |        |          | (px,py)=(ox,oy)
+Cubic       |            | w(1),x(2),y(2), |  10    |          |    =(x2,y2)
+            |            | w(2),x(3),y(3), |        |          |
+            |            | w(3)            |        |          |
+--------------------------------------------------------------------------------
+
+	Within Section 8.6.7 Modifying Path Data:
+	after sentence:
+		"In these cases, the path will have been subject to the segment 
+		promotion rules as specified in those functions."
+	insert sentence:
+		"Paths that have been transformed using vgTransformPath with clipping
+		enabled should not be passed to vgModifyPathCoords, as path segments 
+		could have been removed or changed.
+	
+    Within Section 8.6.8 Transform a Path:
+    change sentence:
+        "The appended path is equivalent to the results of applying the current
+        path-user-to-surface transformation (VG_MATRIX_PATH_USER_TO_SURFACE) to
+        srcPath."
+    to:
+        "The appended path is equivalent to the results of applying the current
+        path-user-to-surface transformation (VG_MATRIX_PATH_USER_TO_SURFACE) to
+        srcPath, taking into account whether the matrix has been configured as
+        projective or affine, via vgProjectiveMatrixNDS.
+        "
+        
+    After paragraph beginning:
+		"The appended path is equivalent to the results..."
+	insert paragraphs:
+        "  If VG_CLIP_MODE_NDS is set to VG_CLIPMODE_NONE_NDS no clipping or
+        culling occurs.
+        
+          If VG_CLIP_MODE_NDS is set to VG_CLIPMODE_CLIP_CLOSED_NDS, clipped 
+        segments are replaced by line segments along the clip line so that
+        winding rules would be unaffected if the clipped path were drawn filled.
+        The number of line segments and coordinates are implementation dependent
+        but will ensure correct winding. Complete paths may be removed if they 
+        are completely clipped. This clipping mode would normally be used if the 
+        transformed path is to be filled. Stroking the returned path segments 
+        may result in artefacts along the clipping lines.
+
+          If VG_CLIP_MODE_NDS is set to VG_CLIPMODE_CLIP_OPEN_NDS, partially
+        clipped segments are replaced by one or more segments of the same type.
+        Completely clipped segments are removed. This clipping mode would 
+        normally be used if the transformed path is to be stroked. Filling the
+        returned path may result in areas being filled, or not filled, 
+        unexpectedly.
+        
+		  If VG_CLIP_MODE_NDS is set to VG_CLIPMODE_CULL_NDS, all segments of
+		the path are removed if any segment of the path crosses into the 
+		clipping half-space. For some implementations culling may be 
+		considerably quicker than clipping, but can have greater visual impact.
+        "
+
+    following paragraph beginning "Any *ARC_TO...." insert:
+        If the path-user-to-surface transformation is projective, that is the
+        projective matrix has been enabled via vgProjectiveMatrixNDS, and row
+        {w0, w1, w2} is not {0, 0, 1} then the following rules are applied.
+        QUAD_TO segments are converted to RQUAD_TO segments prior to applying
+        the transform. CUBIC_TO segments are converted to RCUBIC_TO segments
+        prior to applying the transform. *ARC_TO segments are converted to
+        RQUAD_TO or RCUBIC_TO to segments as appropriate, prior to applying
+        the transform. The original copies of these segments in srcPath remain
+        unchanged.
+
+    Within section 8.6.9 Interpolating Between Paths:
+    following bullet point "Converting (S)QUAD...." insert bullet:
+        . Converting all RQUAD_TO_* segments to RCUBIC_TO form
+
+	before paragraph:
+		"  Overflow may occur silently if the datatype of dstPath has 
+		insufficient range to store an interpolated coordinate value."
+	insert paragraph:
+		"  Paths that have been transformed using vgTransformPath with clipping
+		enabled should not be passed to vgInterpolatePath, as path segments 
+		could have been removed or changed.
+	
+
+    Within section 8.7.6 Non-Scaling Strokes:
+    change sentence:
+        "If the current user-to-surface transformation consists only of uniform
+        scaling, rotation, and translation (i.e., no shearing or non-uniform
+        scaling), then the stroke width may be set to the desired stroke width
+        in drawing surface coordinates, divided by the scaling factor introduced
+        by the transformation."
+    to:
+        "If the current user-to-surface transformation consists only of uniform
+        scaling, rotation, and translation (i.e., no shearing, non-uniform
+        scaling, and no projection {w0,w1,w2} = {0,0,1}), then the stroke width
+        may be set to the desired stroke width in drawing surface coordinates,
+        divided by the scaling factor introduced by the transformation."
+
+    Within section 10.8 Draw Images to the Drawing Surface
+    change sentence:
+	    "When a projective transformation is used (i.e., the bottom row of the 
+	    image-user-to-surface transformation contains values [ w0 w1 w2 ] different
+	     from [ 0 0 1 ]), each corner point (x, y) of the image must result in a 
+	     positive value of d = (x*w0 + y*w1 + w2), or else nothing is drawn."
+    to:
+	    "When a projective transformation is used (i.e., the bottom row of the 
+	    image-user-to-surface transformation contains values [ w0 w1 w2 ] different
+	     from [ 0 0 1 ]), each vertex of the clipped outline of the image must 
+	     result in a positive value of d = (x*w0 + y*w1 + w2), or else nothing 
+	     is drawn."
+    
+    change sentence:
+        "When a projective transformation is used, the value of the
+        VG_IMAGE_MODE parameter is ignored and the behaviour of
+        VG_DRAW_IMAGE_NORMAL is substituted. This avoids the need to generate
+        paint pixels in perspective."
+    to:
+        "When a projective transformation is used, and projective image modes
+        have not been enabled via vgProjectiveMatrixNDS for the image-user-to-
+        surface matrix, the value of the VG_IMAGE_MODE parameter is ignored and
+        the behaviour of VG_DRAW_IMAGE_NORMAL is substituted. This avoids the
+        need to generate paint pixels in perspective. If vgProjectiveMatrixNDS
+        has been called to enable projective image modes for the image-user-to-
+        surface matrix, then VG_IMAGE_MODE remains unmodified, and if the matrix
+        is projective (i.e. {w0,w1,w2} is not {0,0,1}) paint pixels shall be
+        generated in perspective."
+
+    change sentence:
+        "When a projective transformation is used, this mode is used regardless
+        of the setting of the VG_IMAGE_MODE parameter."
+    to:
+        "When a projective transformation is used and projective image modes
+        have not been enabled via vgProjectiveMatrixNDS for the image-user-to-
+        surface matrix, this mode is used regardless of the setting of the
+        VG_IMAGE_MODE parameter."
+
+	Within Section 17 The VGU Utility Library:
+	Rename section 17.2 Image Warping
+	to:
+		"Section 17.2 Image and Path Warping"
+		
+	Within Section  17.2 Image and Path Warping:
+	after heading vguComputeWarpQuadToQuad:
+	insert paragraph:
+	"vguTransformClipLineNDS
+	  The vguTransformClipLineNDS function sets the coefficients {Aout, Bout, 
+	Cout} of the clip line to the transformed line defined by coefficients 
+	{Ain, Bin, Cin}. The transform is defined by the matrix and inverse
+	parameters. If inverse has the value VG_FALSE the transform is specified
+	directly by matrix. If inverse has the value VG_TRUE the transform is 
+	specified by the inverse of matrix.
+	
+	The forward transformed clip line, inverse == VG_FALSE, is defined as:
+		(Aout)   (      T)-1 (Ain)
+		(Bout) = (matrix )  .(Bin)
+		(Cout)   (       )   (Cin)
+
+	The inverse transformed clip line, inverse == VG_TRUE, is defined as:
+		(Aout)   (      T) (Ain)
+		(Bout) = (matrix ).(Bin)
+		(Cout)   (       ) (Cin)
+
+	where:	 T 
+			M  is the transpose of matrix M
+			 -1
+			M  is the inverse of matrix M
+
+	Note that the forward transform requires the inversion of matrix, but
+	the inverse transform does not.
+	
+	If inverse has the value VG_FALSE, and the inverse of matrix is 
+	degenerate, VGU_BAD_WARP_ERROR is returned and Aout, Bout and Cout remain
+	unchanged.
+		  
+	    VGU_API_CALL VGUErrorCode vguTransformClipLineNDS(
+		    const VGfloat Ain, 
+			const VGfloat Bin, 
+			const VGfloat Cin, 
+			const VGfloat* matrix, 
+			const VGboolean inverse, 
+			VGfloat* Aout, 
+			VGfloat* Bout, 
+			VGfloat* Cout);
+	
+	ERRORS
+	VGU_ILLEGAL_ARGUMENT_ERROR
+	- if matrix, Aout, Bout or Cout are NULL
+	- if matrix, Aout, Bout or Cout are not properly aligned
+	VGU_BAD_WARP_ERROR
+	- if inverse == VG_FALSE, and the inverse of matrix is degenerate
+	
+New State
+
+    None
+
+Issues
+
+Revision History
+
+    Revision 1 (September 14, 2007)
+      - Original Release
+
+	Revision 2 (January 14, 2008)
+	  - Added path clipping
+
+	Revision 3 (March 7, 2008)
+	  - Added path culling, and VGU line transform helper function.
