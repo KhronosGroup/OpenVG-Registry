@@ -84,8 +84,8 @@ include_once("../../assets/static_pages/khr_page_top.php");
 <p> Khronos welcomes comments and bug reports. To provide feedback on the
     OpenVG registry itself (such as reporting missing content, bad links,
     etc.), file an issue in the <a
-    href="https://github.com/KhronosGroup/OpenCL-Registry/issues">
-    OpenCL-Registry </a> Github project. </p>
+    href="https://github.com/KhronosGroup/OpenVG-Registry/issues">
+    OpenVG-Registry </a> Github project. </p>
 
 <p> For the OpenVG API, extensions, and headers, file a bug on the <a
     href="http://www.khronos.org/bugzilla/"> Khronos Bugzilla </a>. Make
