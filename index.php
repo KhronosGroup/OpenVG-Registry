@@ -74,7 +74,7 @@ include_once("../../assets/static_pages/khr_page_top.php");
 </li>
 <li value=6> <a href="extensions/NDS/projective_geometry.txt">VG_NDS_projective_geometry</a>
 </li>
-<li value=7> <a href="../EGL/extensions/KHR/EGL_KHR_fence_sync.txt">VG_KHR_EGL_sync</a> (included with EGL_KHR_fence_sync in the EGL registry)
+<li value=7> <a href="../egl/extensions/KHR/EGL_KHR_fence_sync.txt">VG_KHR_EGL_sync</a> (included with EGL_KHR_fence_sync in the EGL registry)
 </li>
 <!-- New extension specifications must be added here -->
 </ol>
