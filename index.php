@@ -1,17 +1,8 @@
 <?php
 $static_title = 'Khronos OpenVG Registry';
-$static_breadcrumb = array(
-    '/registry/' => 'Registry',
-    'NOLINK' => 'OpenVG Registry'
-);
+
 include_once("../../assets/static_pages/khr_page_top.php");
 ?>
-
-<h1 class="pagetitle">Khronos OpenVG&trade; Registry</h1>
-<div id="mainformat">
-
-
-<h1 style="text-align:center"> Khronos OpenVG&trade; Registry </h1>
 
 <p> The OpenVG registry contains specifications of the core API;
     specifications of Khronos- and vendor-approved OpenVG extensions;
