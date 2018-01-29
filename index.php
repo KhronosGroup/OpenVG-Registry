@@ -9,11 +9,11 @@ include_once("../../assets/static_pages/khr_page_top.php");
     header files corresponding to the specifications; an enumerant and
     function registry; and other related documentation. </p>
 
-<h6> OpenVG Core API Specification, Headers, and Sample Implementation </h6>
+<h2> OpenVG Core API Specification, Headers, and Sample Implementation </h2>
 
 <p> The current version of OpenVG is OpenVG 1.1, updated December 3, 2008.
 
-<h6> OpenVG 1.1 Specific </h6>
+<h3> OpenVG 1.1 Specific </h3>
 
 <ul>
 <li> OpenVG 1.1
@@ -33,8 +33,7 @@ include_once("../../assets/static_pages/khr_page_top.php");
      (December 1, 2008). </li>
 </ul>
 
-
-<h6> OpenVG 1.0.1 Specific </h6>
+<h3> OpenVG 1.0.1 Specific </h3>
 
 <ul>
 <li> OpenVG 1.0.1
@@ -50,8 +49,9 @@ include_once("../../assets/static_pages/khr_page_top.php");
      <a href="ri/openvg-1_0_1-ri.zip">Sample Implementation</a>
      (March, 2007). </li>
 </ul>
-<h6> <a name="otherextspecs"></a>
-     Extension Specifications</h6>
+
+<h2 id="otherextspecs"> Extension Specifications </h2>
+
 <ol>
 <li value=1> <a href="extensions/KHR/VG_KHR_EGL_image.txt">VG_KHR_EGL_image</a>
 </li>
@@ -70,7 +70,7 @@ include_once("../../assets/static_pages/khr_page_top.php");
 <!-- New extension specifications must be added here -->
 </ol>
 
-<h6> Providing Feedback on the Registry </h6>
+<h2> Providing Feedback on the Registry </h2>
 
 <p> Khronos welcomes comments and bug reports. To provide feedback on the
     OpenVG registry itself (such as reporting missing content, bad links,
