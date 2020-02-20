@@ -1,8 +1,3 @@
-# News
-
-OpenVG 1.1 Lite provisional specification and its CTS open to public. Your feedback is welcome.
-OpenVG CTS projects are open to public as open source. Please check https://github.com/KhronosGroup/OpenVG-CTS 
-
 # OpenVG-Registry
 
 The OpenVG-Registry repository contains the OpenVG API and Extension
@@ -14,9 +9,14 @@ repository will be reflected there.
 
 In the past, the OpenVG registry was maintained in a public Subversion
 repository. The history in that repository has not been imported to github,
+but it is still available at
+https://cvs.khronos.org/svn/repos/registry/trunk/public/vg/ .
 
 Interesting files in this repository include:
 
+* index.php - toplevel index page for the web view. This relies on PHP
+  include files found elsewhere on www.khronos.org and so is not very useful
+  in isolation.
 * api/ - OpenVG header files
 * extensions/ - OpenVG extension specifications, grouped into
   vendor-specific subdirectories.
