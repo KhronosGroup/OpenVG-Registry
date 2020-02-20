@@ -1,9 +1,6 @@
-# OpenVG 1.1 Lite Specification (Provisional) - Markdown format 
+# OpenVG 1.1 Lite Specification - Markdown format 
 openvg_lite_spec.md file maybe updated immediately. If you find any issue, please write on issue list. Or you can send merge request to. 
 PDF file will be updated monthly. Around every end of month, PDF file will be updated from updated md file. 
-
-This document is provisional specification. Please leave comment with Issues or email to editor hwan@ajou.ac.kr 
-
 
 ## Release History
 * A003 : 2020/01/31   // Minor foramt changed, Version history 
