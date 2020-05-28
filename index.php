@@ -11,7 +11,15 @@ include_once("../../assets/static_pages/khr_page_top.php");
 
 <h2> OpenVG Core API Specification, Headers, and Sample Implementation </h2>
 
-<p> The current version of OpenVG is OpenVG 1.1, updated December 3, 2008.
+<p> The current version of OpenVG is OpenVG 1.1 Lite, updated May 27, 2020.</p>
+
+     <h3> OpenVG 1.1 Lite Specification </h3>
+
+     <ul>
+          <li> OpenVG 1.1 Lite
+               <a href="specs/openvg-1.1-lite.pdf">Provisional Specification</a> (May 27, 2020).
+          </li>
+     </ul>
 
 <h3> OpenVG 1.1 Specific </h3>
 
