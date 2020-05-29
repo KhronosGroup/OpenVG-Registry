@@ -17,7 +17,7 @@ include_once("../../assets/static_pages/khr_page_top.php");
 
      <ul>
           <li> OpenVG 1.1 Lite
-               <a href="specs/openvg-1.1-lite.pdf">Provisional Specification</a> (May 27, 2020).
+               <a href="specs/openvg_lite_spec.pdf">Provisional Specification</a> (May 27, 2020).
           </li>
      </ul>
 
