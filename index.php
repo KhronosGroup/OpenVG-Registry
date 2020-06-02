@@ -9,19 +9,22 @@ include_once("../../assets/static_pages/khr_page_top.php");
     header files corresponding to the specifications; an enumerant and
     function registry; and other related documentation. </p>
 
-<h2> OpenVG Core API Specification, Headers, and Sample Implementation </h2>
+<h2> OpenVG Specification and Headers </h2>
 
-<p> The current version of OpenVG is OpenVG 1.1 Lite, updated May 27, 2020.</p>
+<p> The current version of OpenVG is OpenVG 1.1 Lite, updated May 27, 2020. </p>
 
      <h3> OpenVG 1.1 Lite Specification </h3>
 
      <ul>
-          <li> OpenVG 1.1 Lite
-               <a href="specs/openvg_lite_spec.pdf">Provisional Specification</a> (May 27, 2020).
-          </li>
+         <li> OpenVG 1.1 Lite
+             <a href="https://www.khronos.org/registry/OpenVG/specs/openvg_lite_spec.pdf">Provisional Specification</a> (PDF, May 27, 2020).
+         </li>
+         <li> OpenVG 1.1 Lite
+             <a href="https://github.com/KhronosGroup/OpenVG-Docs/blob/master/Lite-Specification/openvg_lite_spec.md">Provisional Specification</a> (Markdown, May 27, 2020).
+         </li>
      </ul>
 
-<h3> OpenVG 1.1 Specific </h3>
+<h3> OpenVG 1.1 Specification </h3>
 
 <ul>
 <li> OpenVG 1.1
@@ -36,12 +39,9 @@ include_once("../../assets/static_pages/khr_page_top.php");
      (October 29, 2008). </li>
 <li> OpenVG 1.1 Extension Header File
      <a href="api/1.1/vgext.h"> vgext.h </a> (October 29, 2008). </li>
-<li> OpenVG 1.1
-     <a href="ri/openvg-1.1-ri.zip">Sample Implementation</a>
-     (December 1, 2008). </li>
 </ul>
 
-<h3> OpenVG 1.0.1 Specific </h3>
+<h3> OpenVG 1.0.1 Specification </h3>
 
 <ul>
 <li> OpenVG 1.0.1
@@ -53,9 +53,6 @@ include_once("../../assets/static_pages/khr_page_top.php");
 <li> OpenVG 1.0.1
      <a href="api/1.0.1/vgu.h">vgu.h sample header file</a> (March,
      2007). </li>
-<li> OpenVG 1.0.1
-     <a href="ri/openvg-1_0_1-ri.zip">Sample Implementation</a>
-     (March, 2007). </li>
 </ul>
 
 <h2 id="otherextspecs"> Extension Specifications </h2>
