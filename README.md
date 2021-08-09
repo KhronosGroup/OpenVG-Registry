@@ -30,7 +30,7 @@ Interesting files in this repository include:
 ## Adding Extension Specifications
 
 Extension specification documents can be added by proposing a pull request
-to master, adding the specification .txt file under
+adding the specification .txt file under
 extensions/<vendor>/filename.txt . You must also:
 
 * Allocate an extension number in registry.txt (follow the existing
