@@ -237,7 +237,7 @@ Additions to Chapter 11 of the OpenVG 1.0 Specification (Image Filters)
 
             if knockout = VG_FALSE and objectVisible = VG_TRUE
                 if inner = VG_TRUE
-                    objectAlpha = (1 – InnerEffect(x, y).a);
+                    objectAlpha = (1 Â– InnerEffect(x, y).a);
                 else
                     objectAlpha = 1;
             else
@@ -297,8 +297,8 @@ Library)
 
             vgGetError();   //clear the error state
 
-            dx = distance*cos(angle);
-            dy = distance*sin(angle);
+            dx = distance*cos(angle*PI/180.0f);
+            dy = distance*sin(angle*PI/180.0f);
             VGPaint paintSH = vgCreatePaint();
             vgSetColor(paintSH, shadowColorRGBA);
 
@@ -405,8 +405,8 @@ Library)
 
             vgGetError();   //clear the error state
 
-            dx = distance*cos(angle);
-            dy = distance*sin(angle);
+            dx = distance*cos(angle*PI/180.0f);
+            dy = distance*sin(angle*PI/180.0f);
             VGPaint paintSH = vgCreatePaint();
             VGPaint paintHL = vgCreatePaint();
             vgSetColor(paintHL, highlightColorRGBA);
@@ -520,8 +520,8 @@ Library)
 
             vgGetError();   //clear the error state
 
-            dx = distance*cos(angle);
-            dy = distance*sin(angle);
+            dx = distance*cos(angle*PI/180.0f);
+            dy = distance*sin(angle*PI/180.0f);
             midPos = 0;
             bAddStop = false;
             for (midPos = 0; midPos < (int)stopsCount; midPos++)
